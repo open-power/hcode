@@ -122,11 +122,17 @@ enum  PGPE_ERR_CODE_IDX
     //MACHINE CHECK
     PGPE_ERR_CODE_PGPE_MACHINE_CHECK                            =   58,
 
-
     PGPE_ERR_CODE_PGPE_WOV_OVERV_MAX_CNT                        =   59,
 
     PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE                =   60,
-    PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE                =   61
+    PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE                =   61,
+
+    PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_HOC                       =   62,
+    PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_HUC                       =   63,
+    PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OCSTH                     =   64,
+    PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OKTH                      =   65,
+    PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OV                        =   66,
+    PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT            =   67,
 };
 
 

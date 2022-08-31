@@ -83,6 +83,7 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR            =   0x101b,
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION       =   0x101c,
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE                =   0x101d,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT            =   0x101e,
 
     //CURRENT
     PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT           =   0x1030,
@@ -98,7 +99,7 @@ enum pgpeExtReasonCode
 
     //Resclk
     PGPE_ERR_EXT_CODE_RESCLK_RCIMR_AT_ENABLEMENT_NOT_EQUAL          =   0x1050,
-    PGPE_ERR_EXT_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT                =   0x1051,
+    PGPE_ERR_EXT_CODE_RESCLK_RCPTR_PSTATE_ACK_TIMEOUT               =   0x1051,
     PGPE_ERR_EXT_CODE_RESCLK_RCPTR_TGT_PSTATE_NOT_EQUAL             =   0x1052,
 
     //DDS
@@ -146,6 +147,11 @@ enum pgpeExtReasonCode
 
     //WOV
     PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT                        =   0x10c0,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HOC                       =   0x10c1,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HUC                       =   0x10c2,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OCSTH                     =   0x10c3,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OKTH                      =   0x10c4,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OV                        =   0x10c5,
 
     //Error Injection
     PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL            =   0x10d0,

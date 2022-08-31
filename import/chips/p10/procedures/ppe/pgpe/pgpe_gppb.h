@@ -83,7 +83,10 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 #define pgpe_gppb_get_ext_vrm_parms_transition_start_ns(rail)  G_gppb_ext_vrm_parms->transition_start_ns[rail]
 #define pgpe_gppb_get_ext_vrm_parms_transition_rate_inc_uv_per_us(rail)  G_gppb_ext_vrm_parms->transition_rate_inc_uv_per_us[rail]
 #define pgpe_gppb_get_ext_vrm_parms_transition_rate_dec_uv_per_us(rail) G_gppb_ext_vrm_parms->transition_rate_dec_uv_per_us[rail]
-#define pgpe_gppb_get_ext_vrm_parms_stabilization_time_us(rail)  G_gppb_ext_vrm_parms->stabilization_time_us[rail]
+// NOTE: the "_ns" vs "_us" suffix difference is purposefull as there's a bug in the Pstate Parameter Block header.
+// The attribute is defined as nanoseconds but the member name erroneously has "_us".  This renaming makes the
+// Hcode keep the actual units straight.
+#define pgpe_gppb_get_ext_vrm_parms_stabilization_time_ns(rail)  G_gppb_ext_vrm_parms->stabilization_time_us[rail]
 #define pgpe_gppb_get_ext_vrm_parms_step_size_mv(rail)  G_gppb_ext_vrm_parms->step_size_mv[rail]
 #define pgpe_gppb_get_current_scale_factor(rail) G_gppb_ext_vrm_parms->current_scaling_factor[rail]
 

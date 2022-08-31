@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -63,7 +63,7 @@ void ppe_trace_op(uint32_t i_mark,
     }
 
     // Create the footer of the trace entry
-    if(mark.fields.timestamp)
+    if(mark.fields.timestamp || mark.fields.ack) // eg not 00
     {
         // bits 8:40 goes in tbu32, bits 41:63 go in footer
         // bits 0:7 are tossed
@@ -91,7 +91,7 @@ void ppe_trace_op(uint32_t i_mark,
         PkTraceBigParms big_trace;
         big_trace.word32 = i_mark;
         big_trace.num_parms = big_trace.complete;
-        //*i_payload;
+        // *i_payload;
         payload_size = 4 * (big_trace.num_parms);
         trace_size = payload_size + sizeof(PkTraceBig);
         big_trace.complete = 1;
@@ -119,8 +119,8 @@ void ppe_trace_op(uint32_t i_mark,
         bin_trace.word32 = i_mark;
         bin_trace.num_bytes = bin_trace.complete;
         bin_trace.complete = 1;
-        //*i_payload;
-        //++i_payload;
+        // *i_payload;
+        // ++i_payload;
         payload_size = bin_trace.num_bytes;
         trace_size = payload_size + sizeof(PkTraceBinary);
         footer2 = bin_trace.word32;
@@ -272,7 +272,7 @@ void ppe_trace_pk(uint32_t i_mark,
         PkTraceBigParms big_trace;
         big_trace.word32 = i_mark;
         big_trace.num_parms = big_trace.complete;
-        //*i_payload;
+        // *i_payload;
         payload_size = 4 * (big_trace.num_parms);
         trace_size = payload_size + sizeof(PkTraceBig);
         big_trace.complete = 1;
@@ -300,8 +300,8 @@ void ppe_trace_pk(uint32_t i_mark,
         bin_trace.word32 = i_mark;
         bin_trace.num_bytes = bin_trace.complete;
         bin_trace.complete = 1;
-        //*i_payload;
-        //++i_payload;
+        // *i_payload;
+        // ++i_payload;
         payload_size = bin_trace.num_bytes;
         trace_size = payload_size + sizeof(PkTraceBinary);
         footer2 = bin_trace.word32;

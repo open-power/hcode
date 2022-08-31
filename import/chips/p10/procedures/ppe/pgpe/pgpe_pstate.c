@@ -201,6 +201,9 @@ void pgpe_pstate_init()
 
     G_pgpe_pstate.marker = 0xbabadead;
 
+    G_pgpe_pstate.start_ttsr_cnt = 0;
+    G_pgpe_pstate.start_ttsr = 0;
+
     PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
     G_pgpe_pstate.rvrm_volt  = (((rvcr >> 56) & 0xFF) <<
                                 3); //Extract RVID Value from RVCR[1:7] and then multiply by 8 to get RVRM voltage
@@ -245,6 +248,7 @@ void pgpe_pstate_actuate_step()
 {
     PkMachineContext ctx;
     uint32_t q, c;
+    int32_t delta_mv = 0;
     uint32_t ccsr;
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
 
@@ -363,6 +367,7 @@ void pgpe_pstate_actuate_step()
                                                     (int32_t) G_pgpe_pstate.vdd_next_uplift);
         }
     }
+
     //If raising frequency (lowering Pstates)
     else
     {
@@ -583,9 +588,12 @@ void pgpe_pstate_actuate_step()
         //lower VDD
         if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
         {
+            delta_mv = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr;
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                      G_pgpe_pstate.vdd_next_ext);
+                                      G_pgpe_pstate.vdd_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VDD);
         }
 
         //Write proxy_scale_factor_target to DPCRs
@@ -595,9 +603,12 @@ void pgpe_pstate_actuate_step()
         //lower VCS
         if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
         {
+            delta_mv = G_pgpe_pstate.vcs_next - G_pgpe_pstate.vcs_curr;
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                      G_pgpe_pstate.vcs_next_ext);
+                                      G_pgpe_pstate.vcs_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VCS);
         }
 
         if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_ENABLE))
@@ -614,9 +625,12 @@ void pgpe_pstate_actuate_step()
         //raise VCS
         if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
         {
+            delta_mv = G_pgpe_pstate.vcs_next - G_pgpe_pstate.vcs_curr;
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                      G_pgpe_pstate.vcs_next_ext);
+                                      G_pgpe_pstate.vcs_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VCS);
         }
 
         //Write average of proxy_scale_factor_target and proxy_scale_factor_prev to DPCRs
@@ -626,9 +640,12 @@ void pgpe_pstate_actuate_step()
         //raise VDD
         if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
         {
+            delta_mv = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr;
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                      G_pgpe_pstate.vdd_next_ext);
+                                      G_pgpe_pstate.vdd_next_ext,
+                                      delta_mv,
+                                      RUNTIME_RAIL_VDD);
         }
 
         //Write proxy_scale_factor_target to DPCRs
@@ -703,6 +720,7 @@ void pgpe_pstate_actuate_step()
 void pgpe_pstate_actuate_voltage_step()
 {
     PkMachineContext ctx;
+    int32_t delta_mv = 0;
 
     if (pgpe_wov_ocs_is_wov_overv_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() )
     {
@@ -810,9 +828,12 @@ void pgpe_pstate_actuate_voltage_step()
             //lower VDD
             if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
             {
+                delta_mv = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr;
                 pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                           pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                          G_pgpe_pstate.vdd_next_ext);
+                                          G_pgpe_pstate.vdd_next_ext,
+                                          delta_mv,
+                                          RUNTIME_RAIL_VDD);
             }
 
             //Write proxy_scale_factor_target to DPCRs
@@ -829,9 +850,12 @@ void pgpe_pstate_actuate_voltage_step()
             //raise VDD
             if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_STATIC_VOLTAGE_ENABLE))
             {
+                delta_mv = G_pgpe_pstate.vdd_next - G_pgpe_pstate.vdd_curr;
                 pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                                           pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                          G_pgpe_pstate.vdd_next_ext);
+                                          G_pgpe_pstate.vdd_next_ext,
+                                          delta_mv,
+                                          RUNTIME_RAIL_VDD);
             }
 
             //Write proxy_scale_factor_target to DPCRs
@@ -864,7 +888,6 @@ void pgpe_pstate_actuate_voltage_step()
                          G_pgpe_pstate.vdd_wov_bias, pgpe_wov_ocs_get_wov_tgt_pct(), pgpe_wov_ocs_get_wov_curr_pct());
             G_pgpe_pstate.voltage_step_trace_cnt++;
         }
-
     }
 }
 
