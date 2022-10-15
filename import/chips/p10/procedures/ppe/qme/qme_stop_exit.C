@@ -214,11 +214,15 @@ qme_stop_handoff_pc(uint32_t core_target, uint32_t& core_spwu)
 
 
     //===============//
-    if (G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair)
+    if( !G_qme_record.c_auto_stop11_wakeup &&
+        ( G_qme_record.c_regular_wakeup_fast_before_pair |
+          G_qme_record.c_regular_wakeup_slow_before_pair |
+          core_spwu ) )
+
     {
         //Dont assert pm_exit for the sibling one
         core_wakeup = core_target &
-                      (G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair);
+                      (core_spwu | G_qme_record.c_regular_wakeup_fast_before_pair | G_qme_record.c_regular_wakeup_slow_before_pair);
 
         if (!core_wakeup)
         {
