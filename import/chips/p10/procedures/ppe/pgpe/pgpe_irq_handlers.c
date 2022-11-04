@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -255,6 +255,9 @@ void pgpe_irq_xstop_handler()
 void pgpe_irq_pvref_fault_handler()
 {
     PK_TRACE("IRQ: PVREF Fault");
+    g_oimr_override |= BIT64(7);
+    PPE_PUTSCOM(TP_TPCHIP_OCC_OCI_OCB_OCCMISC_WO_CLEAR, BITS32(TP_TPCHIP_OCC_OCI_OCB_OCCMISC_PVREF_ERROR_EN,
+                TP_TPCHIP_OCC_OCI_OCB_OCCMISC_PVREF_ERROR_EN_LEN));
     out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_PVREF_ERROR));
     //mask OISR0[PVREF_ERROR]
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_PVREF_ERROR));
