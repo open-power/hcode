@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2018,2022                                                    -->
+<!-- COPYRIGHT 2018,2023                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -3244,6 +3244,7 @@
     <valueType>uint8</valueType>
     <platInit/>
     <default>48</default>
+    <writeable/>
     <group>safe</group>
   </attribute>
 
