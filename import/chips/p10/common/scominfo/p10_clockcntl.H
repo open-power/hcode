@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -48,56 +48,50 @@
 extern "C" {
 
     /// Constants
-    const uint32_t NUM_CHIPLET_IDS      =   40;  // Num of chiplet IDs
+    const uint32_t NUM_CHIPLET_IDS      =   30;  // Num of chiplet IDs
     const uint8_t  ALL_GOOD_ID          = 0xFF;  // RingID that marks default clock domains
 
     // #################################################################
-    // Chiplet vital domain array
-    // Each entry defines the Vital clock domain name for the Chiplet ID index
-    // For non-existing Chiplet ID, entry is P10_FAKE_DOMAIN
+    // Chiplet vital domain table
     // #################################################################
-    const CLOCK_DOMAIN ChipletVitalDomainTable[NUM_CHIPLET_IDS] =
+    struct ChipletVitlDomain_t
     {
-        P10_FSIVITL_DOMAIN,           // Chiplet 0, FSI
-        P10_TPVITL_DOMAIN,            // Chiplet 1, TP
-        P10_N0VITL_DOMAIN,            // Chiplet 2, N0
-        P10_N1VITL_DOMAIN,            // Chiplet 3, N1
-        P10_FAKE_DOMAIN,              // Chiplet 4, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 5, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 6, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 7, invalid
-        P10_PCI0VITL_DOMAIN,          // Chiplet 8, PCI0
-        P10_PCI1VITL_DOMAIN,          // Chiplet 9, PCI1
-        P10_FAKE_DOMAIN,              // Chiplet 10, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 11, invalid
-        P10_MC0VITL_DOMAIN,           // Chiplet 12, MC0
-        P10_MC1VITL_DOMAIN,           // Chiplet 13, MC1
-        P10_MC2VITL_DOMAIN,           // Chiplet 14, MC2
-        P10_MC3VITL_DOMAIN,           // Chiplet 15, MC3
-        P10_PAU0VITL_DOMAIN,          // Chiplet 16, PAU0
-        P10_PAU1VITL_DOMAIN,          // Chiplet 17, PAU1
-        P10_PAU2VITL_DOMAIN,          // Chiplet 18, PAU2
-        P10_PAU3VITL_DOMAIN,          // Chiplet 19, PAU3
-        P10_FAKE_DOMAIN,              // Chiplet 20, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 21, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 22, invalid
-        P10_FAKE_DOMAIN,              // Chiplet 23, invalid
-        P10_AXON0VITL_DOMAIN,         // Chiplet 24, Axon0
-        P10_AXON1VITL_DOMAIN,         // Chiplet 25, Axon1
-        P10_AXON2VITL_DOMAIN,         // Chiplet 26, Axon2
-        P10_AXON3VITL_DOMAIN,         // Chiplet 27, Axon3
-        P10_AXON4VITL_DOMAIN,         // Chiplet 28, Axon4
-        P10_AXON5VITL_DOMAIN,         // Chiplet 29, Axon5
-        P10_AXON6VITL_DOMAIN,         // Chiplet 30, Axon6
-        P10_AXON7VITL_DOMAIN,         // Chiplet 31, Axon7
-        P10_EQ0VITL_DOMAIN,           // Chiplet 32, EQ0
-        P10_EQ1VITL_DOMAIN,           // Chiplet 33, EQ1
-        P10_EQ2VITL_DOMAIN,           // Chiplet 34, EQ2
-        P10_EQ3VITL_DOMAIN,           // Chiplet 35, EQ3
-        P10_EQ4VITL_DOMAIN,           // Chiplet 36, EQ4
-        P10_EQ5VITL_DOMAIN,           // Chiplet 37, EQ5
-        P10_EQ6VITL_DOMAIN,           // Chiplet 38, EQ6
-        P10_EQ7VITL_DOMAIN,           // Chiplet 39, EQ7
+        const uint8_t      chipletId;  // ChipletId
+        const CLOCK_DOMAIN domain;     // Domain
+    };
+
+    const ChipletVitlDomain_t ChipletVitlDomainTable[] =
+    {
+        { PIB_CHIPLET_ID,   P10_FSIVITL_DOMAIN },           // Chiplet 0, FSI
+        { PERV_CHIPLET_ID,  P10_TPVITL_DOMAIN },            // Chiplet 1, TP
+        { N0_CHIPLET_ID,    P10_N0VITL_DOMAIN },            // Chiplet 2, N0
+        { N1_CHIPLET_ID,    P10_N1VITL_DOMAIN },            // Chiplet 3, N1
+        { PCI0_CHIPLET_ID,  P10_PCI0VITL_DOMAIN },          // Chiplet 8, PCI0
+        { PCI1_CHIPLET_ID,  P10_PCI1VITL_DOMAIN },          // Chiplet 9, PCI1
+        { MC0_CHIPLET_ID,   P10_MC0VITL_DOMAIN },           // Chiplet 12, MC0
+        { MC1_CHIPLET_ID,   P10_MC1VITL_DOMAIN },           // Chiplet 13, MC1
+        { MC2_CHIPLET_ID,   P10_MC2VITL_DOMAIN },           // Chiplet 14, MC2
+        { MC3_CHIPLET_ID,   P10_MC3VITL_DOMAIN },           // Chiplet 15, MC3
+        { PAU0_CHIPLET_ID,  P10_PAU0VITL_DOMAIN },          // Chiplet 16, PAU0
+        { PAU1_CHIPLET_ID,  P10_PAU1VITL_DOMAIN },          // Chiplet 17, PAU1
+        { PAU2_CHIPLET_ID,  P10_PAU2VITL_DOMAIN },          // Chiplet 18, PAU2
+        { PAU3_CHIPLET_ID,  P10_PAU3VITL_DOMAIN },          // Chiplet 19, PAU3
+        { AXON0_CHIPLET_ID, P10_AXON0VITL_DOMAIN },         // Chiplet 24, Axon0
+        { AXON1_CHIPLET_ID, P10_AXON1VITL_DOMAIN },         // Chiplet 25, Axon1
+        { AXON2_CHIPLET_ID, P10_AXON2VITL_DOMAIN },         // Chiplet 26, Axon2
+        { AXON3_CHIPLET_ID, P10_AXON3VITL_DOMAIN },         // Chiplet 27, Axon3
+        { AXON4_CHIPLET_ID, P10_AXON4VITL_DOMAIN },         // Chiplet 28, Axon4
+        { AXON5_CHIPLET_ID, P10_AXON5VITL_DOMAIN },         // Chiplet 29, Axon5
+        { AXON6_CHIPLET_ID, P10_AXON6VITL_DOMAIN },         // Chiplet 30, Axon6
+        { AXON7_CHIPLET_ID, P10_AXON7VITL_DOMAIN },         // Chiplet 31, Axon7
+        { EQ0_CHIPLET_ID,   P10_EQ0VITL_DOMAIN },           // Chiplet 32, EQ0
+        { EQ1_CHIPLET_ID,   P10_EQ1VITL_DOMAIN },           // Chiplet 33, EQ1
+        { EQ2_CHIPLET_ID,   P10_EQ2VITL_DOMAIN },           // Chiplet 34, EQ2
+        { EQ3_CHIPLET_ID,   P10_EQ3VITL_DOMAIN },           // Chiplet 35, EQ3
+        { EQ4_CHIPLET_ID,   P10_EQ4VITL_DOMAIN },           // Chiplet 36, EQ4
+        { EQ5_CHIPLET_ID,   P10_EQ5VITL_DOMAIN },           // Chiplet 37, EQ5
+        { EQ6_CHIPLET_ID,   P10_EQ6VITL_DOMAIN },           // Chiplet 38, EQ6
+        { EQ7_CHIPLET_ID,   P10_EQ7VITL_DOMAIN },           // Chiplet 39, EQ7
     };
 
     // #################################################################

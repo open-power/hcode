@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2022                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -149,9 +149,22 @@ extern "C"
             {
 
 #ifdef DEBUG_PRINT
-                printf("\nChipletVitalDomainTable look-up: ChipletId 0x%.2X\n", l_chipletId);
+                printf("\nChipletVitlDomainTable look-up: ChipletId 0x%.2X\n", l_chipletId);
 #endif
-                o_domain = ChipletVitalDomainTable[l_chipletId];
+
+                o_domain = P10_FAKE_DOMAIN;
+
+                // Find matching chiplet ID in vitl domain table
+                for (l_index = 0;
+                     l_index < ( sizeof(ChipletVitlDomainTable) / sizeof(ChipletVitlDomain_t) );
+                     ++l_index)
+                {
+                    if ( (ChipletVitlDomainTable[l_index].chipletId == l_chipletId) )
+                    {
+                        o_domain = ChipletVitlDomainTable[l_index].domain;
+                        break;
+                    }
+                }
 
                 // Check for invalid chiplet ID that results in bad domain
                 if (o_domain == P10_FAKE_DOMAIN)
