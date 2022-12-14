@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -111,11 +111,22 @@ void xgpe_gpe3_func_handler()
             PPE_GETSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRB_RW, (l_quad - 1)), l_scrb_data);
             l_scra_data = (l_scrb_data & BITS64(0, 8)) >> 24;
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_WO_CLEAR, (l_quad - 1)), BITS64(24, 8));
+            sync();
             PPE_PUTSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_WO_OR, (l_quad - 1)), l_scra_data);
+        }
+    }
 
-            if( l_scra_data )
+    for (l_quad = 1; l_quad <= MAX_QUADS; ++l_quad)
+    {
+        if (IS_QUAD_CONFIG(l_ccsr, (l_quad << 2)))
+        {
+            PPE_GETSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRB_RW, (l_quad - 1)), l_scrb_data);
+            PPE_GETSCOM(PPE_SCOM_ADDR_UC_Q(QME_SCRA_RW, (l_quad - 1)), l_scra_data);
+
+            if( l_scra_data & BITS64(24, 8) )
             {
-                PKTRACE("quad %x, SCRA %x SCRB %x", l_quad, l_scrb_data >> 32, l_scra_data >> 32);
+                PKTRACE("quad %x, SCRB %x SCRA %x",
+                        (l_quad - 1), l_scrb_data >> 32, l_scra_data >> 32);
             }
         }
     }

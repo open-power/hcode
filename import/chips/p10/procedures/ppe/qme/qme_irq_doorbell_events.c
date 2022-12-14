@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2022                                                    */
+/* COPYRIGHT 2018,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -169,16 +169,28 @@ qme_doorbell1_event()
 
     if( (scratchB >> 24) != scratchA )
     {
-        missed_targets = (scratchB >> 24);
-        missed_targets = scratchA & (~missed_targets);
-        missed_targets = (missed_targets & 0xF) | ((missed_targets & 0xF0) >> 4);
-
-        if( missed_targets )
+        if( scratchA == 0 )
         {
-            PPE_PUTSCOM_MC(CORE_FIR_OR, missed_targets, BIT64(60));
+            PKTRACE("Warning: Scratch A check 0, using Scratch B as it is assuming it is valid");
         }
+        else if( scratchB == 0 )
+        {
+            PKTRACE("Warning: Scratch B check 0, using Scratch A to restore assuming it is valid");
+            scratchB = scratchA << 24;
+        }
+        else
+        {
+            missed_targets = (scratchB >> 24);
+            missed_targets = scratchA & (~missed_targets);
+            missed_targets = (missed_targets & 0xF) | ((missed_targets & 0xF0) >> 4);
 
-        QME_ERROR_HANDLER(QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR, scratchB, scratchA, G_qme_record.doorbell1_msg);
+            if( missed_targets )
+            {
+                PPE_PUTSCOM_MC(CORE_FIR_OR, missed_targets, BIT64(60));
+            }
+
+            QME_ERROR_HANDLER(QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR, scratchB, scratchA, G_qme_record.doorbell1_msg);
+        }
     }
 
     // block msgs(0x5-0x7) and scratchB register shouldn't be 0
