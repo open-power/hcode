@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1060,12 +1060,13 @@ void pgpe_pstate_apply_clips()
             clip_min = G_pgpe_pstate.clip_max;
         }
 
-        //Make sure that clip_min is not lower(freq), higher pstate than clip_min. If, yes, then set
-        //it to pstate_safe
-        if(clip_min > G_pgpe_pstate.pstate_safe)
-        {
-            clip_min = G_pgpe_pstate.pstate_safe;
-        }
+    }
+
+    //Make sure that clip_min is not lower(freq), higher pstate than clip_min. If, yes, then set
+    //it to pstate_safe
+    if(clip_min > G_pgpe_pstate.pstate_safe)
+    {
+        clip_min = G_pgpe_pstate.pstate_safe;
     }
 
     //Max Pstate(lower freq) should not be higher(lower freq) than pstate_safe
