@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -486,16 +486,6 @@ static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_CNTL2_PL_ENABLE_B = 51;
 static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_CNTL2_PL_SLAVE_MODE_B = 52;
 static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_CNTL2_PL_QUAD_MODE_B = 53;
 //<< [RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_CNTL2_PL]
-// omi/reg00014.H
-
-//>> [RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL]
-static const uint64_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL = 0x8003384010012c3full;
-
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL_FW_INERTIA_AMT = 48;
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL_FW_INERTIA_AMT_LEN = 4;
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL_PHASE_STEP = 56;
-static const uint32_t RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL_PHASE_STEP_LEN = 7;
-//<< [RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_MODE4_PL]
 // omi/reg00014.H
 
 //>> [RXPACKS_0_DEFAULT_RD_RX_BIT_REGS_STAT2_PL]
