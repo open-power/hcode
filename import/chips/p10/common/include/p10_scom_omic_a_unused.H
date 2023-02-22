@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -99,20 +99,6 @@ static const uint64_t CTL_REGS_TX_CNTL10_PG = 0x800c2c4010012c3full;
 static const uint32_t CTL_REGS_TX_CNTL10_PG_TX_PATTERN_48_63 = 48;
 static const uint32_t CTL_REGS_TX_CNTL10_PG_TX_PATTERN_48_63_LEN = 16;
 //<< [CTL_REGS_TX_CNTL10_PG]
-// omic/reg00010.H
-
-//>> [CTL_REGS_TX_CNTL2_PG]
-static const uint64_t CTL_REGS_TX_CNTL2_PG = 0x800c4c4010012c3full;
-
-static const uint32_t CTL_REGS_TX_CNTL2_PG_A_FINE_SEL = 48;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_A_FINE_SEL_LEN = 3;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_A_COARSE_SEL = 51;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_A_COARSE_SEL_LEN = 4;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_A_BER_SEL = 55;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_A_BER_SEL_LEN = 6;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_ENABLE = 61;
-static const uint32_t CTL_REGS_TX_CNTL2_PG_CLOCK_ENABLE = 62;
-//<< [CTL_REGS_TX_CNTL2_PG]
 // omic/reg00010.H
 
 //>> [DATASM_REGS_RX_CNT22_PG]

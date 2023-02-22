@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -817,15 +817,16 @@ extern "C"
             if ( (getIoGroupAddr() == 0x2 ) ||
                  (getIoGroupAddr() == 0x3 ) )
             {
-                // Reg address must start with 1xxx (per group),
-                // excluding 1111 (per bus)
-                uint32_t regAddr = getIoRegAddr();
+                //// Reg address must start with 1xxx (per group),
+                //// excluding 1111 (per bus)
+                //uint32_t regAddr = getIoRegAddr();
 
-                if ( ( ( regAddr & 0x1E0 ) != 0x1E0 ) &&
-                     ( ( regAddr & 0x100 ) == 0x100 ) )
-                {
-                    l_omicTarget = true;
-                }
+                //if ( ( ( regAddr & 0x1E0 ) != 0x1E0 ) &&
+                //     ( ( regAddr & 0x100 ) == 0x100 ) )
+                //{
+                //    l_omicTarget = true;
+                //}
+                l_omicTarget = true;
             }
         }
 
