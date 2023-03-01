@@ -4,9 +4,9 @@
 #
 # $Source: tools/envsetup/setupgithooks $
 #
-# OpenPOWER HCODE Project
+# OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2017
+# COPYRIGHT 2015,2023
 # [+] International Business Machines Corp.
 #
 #
@@ -34,7 +34,19 @@ then
     if [ ! -f $HOOKSDIR/commit-msg ]
     then
         echo "Copying Gerrit hooks..."
-        scp -p -q $GERRIT_SRV:hooks/commit-msg $HOOKSDIR || exit -1
+        ssh_ver=$(ssh -V 2>&1)
+        echo "ssh_ver: $ssh_ver"
+        ssh_ver_maj=$(echo $ssh_ver|cut -d ' ' -f1|cut -d ',' -f1|cut -d '_' -f2|cut -d '.' -f1)
+        echo "ssh_ver_maj: $ssh_ver_maj"
+
+        if [[ ($ssh_ver_maj < 9) ]]
+        then
+            echo "ssh_ver_maj is less than 9"
+            scp -p -q $GERRIT_SRV:hooks/commit-msg $HOOKSDIR || exit -1
+        else
+            echo "ssh_ver_maj is equal to or greater than 9"
+            scp -O -p -q $GERRIT_SRV:hooks/commit-msg $HOOKSDIR || exit -1
+        fi
     fi
 
     # Copy custom pre/post commit hooks from tools directory.
