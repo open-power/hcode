@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2022                                                    */
+/* COPYRIGHT 2020,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -50,7 +50,7 @@ enum PGPE_OPT_CODES
     PGPE_OPT_OCS_THRESH_TRANS       = 0x92,
     PGPE_OPT_OCS_DIRTY_TYPE         = 0x93,
     PGPE_OPT_OCS_DROOP_COND         = 0x9e,
-    PGPE_OPT_CEFF_OVERAGE_UPDT      = 0x9f,
+    PGPE_OPT_CEFF_OVERAGE_UPDT      = 0xA4,
     PGPE_OPT_DDS_INIT_HVY           = 0xA2,
     PGPE_OPT_PSTATE_START_HVY       = 0xA3,
 

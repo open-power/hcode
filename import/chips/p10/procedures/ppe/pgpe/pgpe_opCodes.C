@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -93,7 +93,7 @@ void pgpe_opCodeTable(
         {PGPE_OPT_OCS_THRESH_TRANS, OP_HASH("OP: OCS_THRESHOLD  | Thresh=%u(Amp) Delta=%d(Amp)"), {2, 2, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_OCS_DIRTY_TYPE,   OP_HASH("OP: OCS_DIRTY_TYPE | Type=%d"), {1, 0, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_OCS_DROOP_COND ,  OP_HASH("OP: DROOP_COND     | Condition=0x%01x(0x3:OK,0x2:LIGHT,0x1:HEAVY)"), {1, 0, 0, 0, 0, 0, 0, 0, 0}},
-        {PGPE_OPT_CEFF_OVERAGE_UPDT, OP_HASH("OP: CEFF_OVERAGE   | Overage=%u PrevOverage=%u OverIdx=%u PrevOverIdx=%u"), {1, 1, 1, 1, 0, 0, 0, 0, 0}},
+        {PGPE_OPT_CEFF_OVERAGE_UPDT, OP_HASH("OP: CEFF_OVERAGE   | TgtFTX=%u PrevFTX=%u NextFTX=%u Spare=%u CeffErr=%d CeffAdj=%d"), {1, 1, 1, 1, 2, 2, 0, 0, 0}},
         {PGPE_OPT_DDS_INIT_HVY,     OP_HASH("OP: DDS_INIT_HVY   | TTSR=0x%016Xll"), {8, 0, 0, 0, 0, 0, 0, 0, 0}},
         {PGPE_OPT_PSTATE_START_HVY, OP_HASH("OP: PS_START_HVY   | TTSR=0x%016Xll"), {8, 0, 0, 0, 0, 0, 0, 0, 0}},
 

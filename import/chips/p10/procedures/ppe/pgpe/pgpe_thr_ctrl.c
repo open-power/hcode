@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -117,6 +117,15 @@ void pgpe_thr_ctrl_update(uint32_t target_throttle)
 
         PK_TRACE_INF("THR: ceff_prop=%d, ceff_intg=%d,ceff_adj=%d", ceff_prop, ceff_intg, ceff_adj);
         PK_TRACE_INF("THR: curr_ftx=%d, next_ftx=%d", G_pgpe_thr_ctrl.curr_ftx, G_pgpe_thr_ctrl.next_ftx);
+
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_word(1, 0);
+        pgpe_opt_set_byte(0, target_ftx);
+        pgpe_opt_set_byte(1, G_pgpe_thr_ctrl.curr_ftx);
+        pgpe_opt_set_byte(2, G_pgpe_thr_ctrl.next_ftx);
+        pgpe_opt_set_half(2, (int16_t)ceff_err);
+        pgpe_opt_set_half(3, (int16_t)ceff_adj);
+        ppe_trace_op(PGPE_OPT_CEFF_OVERAGE_UPDT, pgpe_opt_get());
 
     }
     while(0);
