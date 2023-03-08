@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2015,2022                                                    -->
+<!-- COPYRIGHT 2015,2023                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -369,6 +369,7 @@
   <writeable/>
   <platInit/>
   <initToZero/>
+  <mrwHide/>
 </attribute>
 <!-- ********************************************************************** -->
 <attribute>
