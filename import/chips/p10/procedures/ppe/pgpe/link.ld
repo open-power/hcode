@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -54,11 +54,14 @@ SECTIONS
     _PGPE_IMG_HEADER = _VECTOR_START +  PGPE_HEADER_IMAGE_OFFSET;
     PGPE_HEADER_IMAGE_NAME _PGPE_IMG_HEADER : { *(PGPE_HEADER_IMAGE_NAME) } > sram
 
+
+
     /*====================================
      * Debug pointers table
      ====================================*/
     _DEBUG_PTRS_START = _VECTOR_START + PGPE_DEBUG_PTRS_OFFSET;
     .debug_ptrs _DEBUG_PTRS_START : { *(.debug_ptrs) } > sram
+
 
     . = ALIGN(16);
 	_DATA_STRUCT_TABLE_START = _DEBUG_PTRS_START + PGPE_DEBUG_PTRS_SIZE;
@@ -66,6 +69,9 @@ SECTIONS
    
 	_DATA_STRUCT_START = _DATA_STRUCT_TABLE_START + PGPE_DATA_STRUCT_TABLE_SIZE;
 	.data_structs_ _DATA_STRUCT_START : { *(.data_structs) } > sram
+
+    _M_CHECK_HANDLER_START = .;
+    .m_check_handler_ _M_CHECK_HANDLER_START : { *(.m_check_handler) } > sram
 
     . = ALIGN(16);
     /*======================================
