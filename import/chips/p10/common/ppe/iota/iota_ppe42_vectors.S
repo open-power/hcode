@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2022                                                    */
+/* COPYRIGHT 2017,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -102,6 +102,9 @@ __watchdog_interrupt:
 __virtual_exception:
     _pk_panic IOTA_VIRTUAL_EXCEPTION
 
+
+
+.section    .m_check_handler, "ax", @progbits
 
 #if defined __PPE_PGPE || __PPE_XGPE
 .global __special_machine_check_handler
