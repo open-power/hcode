@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -632,7 +632,7 @@ uint32_t pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* 
     }
     else
     {
-        PK_TRACE_ERR("AVS: Stat_R, bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Stat_R, bus_num=%u not available", bus_num);
         *ret_status = 0;
         rc = 0xFF;
     }
@@ -767,7 +767,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
     }
     else
     {
-        PK_TRACE_ERR("AVS: Volt_W bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Volt_W bus_num=%u not available", bus_num);
     }
 
     pk_critical_section_exit(&ctx);
@@ -830,7 +830,7 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
     else
     {
-        PK_TRACE_ERR("AVS: Volt_R, bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Volt_R, bus_num=%u not available", bus_num);
         *ret_volt = 0;
     }
 
@@ -890,7 +890,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
     else
     {
-        PK_TRACE_ERR("AVS: Curr_R, bus_num=%u not available", bus_num)
+        PK_TRACE_ERR("AVS: Curr_R, bus_num=%u not available", bus_num);
         *ret_current = 0;
     }
 

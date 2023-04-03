@@ -232,7 +232,7 @@ void pgpe_irq_occ_fault_handler()
 
     out32(TP_TPCHIP_OCC_OCI_OCB_OISR0_WO_CLEAR, BIT32(TP_TPCHIP_OCC_OCI_OCB_OISR0_OCC_ERROR));
 
-    PK_TRACE_INF("IRQ: OCCLFIR=0x%08x%08x", occlfir >> 32, occlfir & 0xFFFFFFFF);
+    PK_TRACE_INF("IRQ: OCCLFIR=0x%08x%08x", (occlfir >> 32), (occlfir & 0xFFFFFFFF));
 }
 
 void pgpe_irq_xgpe_fault_handler()

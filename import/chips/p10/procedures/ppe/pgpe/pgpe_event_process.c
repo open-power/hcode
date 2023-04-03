@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -278,7 +278,7 @@ void pgpe_process_pstate_start()
         {
             delta_mv = G_pgpe_pstate.vcs_next - G_pgpe_pstate.vcs_curr_ext;
             PK_TRACE_INF("PEP: Pstate start VCS first delta %d, next %d curr %d",
-                         delta_mv, G_pgpe_pstate.vcs_next, G_pgpe_pstate.vcs_curr)
+                         delta_mv, G_pgpe_pstate.vcs_next, G_pgpe_pstate.vcs_curr);
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                       G_pgpe_pstate.vcs_next_ext,
@@ -307,7 +307,7 @@ void pgpe_process_pstate_start()
 
             delta_mv = G_pgpe_pstate.vcs_next - G_pgpe_pstate.vcs_curr_ext;
             PK_TRACE_INF("PEP: Pstate start VCS first delta %d, next %d curr %d",
-                         delta_mv, G_pgpe_pstate.vcs_next, G_pgpe_pstate.vcs_curr)
+                         delta_mv, G_pgpe_pstate.vcs_next, G_pgpe_pstate.vcs_curr);
             pgpe_avsbus_voltage_write(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                                       pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
                                       G_pgpe_pstate.vcs_next_ext,

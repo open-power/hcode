@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2021                                                    */
+/* COPYRIGHT 2017,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -219,7 +219,7 @@ extern "C"
 //Trace function prototypes
 void pk_trace_set_freq(uint32_t i_freq);
 
-#if (PK_TRACE_VERSION == 3)
+#if (PK_TRACE_VERSION == 3 || PK_OP_TRACE_SUPPORT == 1)
 void ppe_trace_pk(uint32_t i_mark, uint32_t* i_parms);
 void ppe_trace_pk1(uint32_t i_mark);
 void ppe_trace_pk2(uint32_t i_mark, uint32_t parm1);
@@ -232,8 +232,9 @@ void ppe_trace_op2(uint32_t i_mark, uint32_t parm1);
 void ppe_trace_op3(uint32_t i_mark, uint32_t parm1, uint32_t parm2);
 void ppe_trace_op5(uint32_t i_mark, uint32_t parm1, uint32_t parm2,
                    uint32_t parm3, uint32_t parm4);
+#endif
 
-#else
+#if (PK_TRACE_VERSION == 2)
 void pk_trace_tiny(uint32_t i_parm);
 void pk_trace_big(uint32_t i_hash_and_count,
                   uint64_t i_parm1, uint64_t i_parm2);
