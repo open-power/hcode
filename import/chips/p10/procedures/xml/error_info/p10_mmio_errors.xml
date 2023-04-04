@@ -27,11 +27,36 @@
   <hwpError>
     <rc>RC_P10_MMIO_BAD_SIZE_ERR</rc>
     <description>
-      Procedure: p10_mmio_utils
+      Procedure: p10_get_mmio, p10_put_mmio
       Incorrect data size for MMIO operation
     </description>
     <ffdc>TARGET</ffdc>
     <ffdc>SIZE</ffdc>
+    <!-- no callout, deconfig, gard tags as FW does not consume             -->
+  </hwpError>
+  <!-- ******************************************************************** -->
+  <hwpError>
+    <rc>RC_P10_MMIO_BAD_MULTICAST_REQUEST_ERR</rc>
+    <description>
+      Procedure: p10_get_mmio, p10_put_mmio
+      OCMB target does not support multicast
+    </description>
+    <ffdc>TARGET</ffdc>
+    <ffdc>ADDR</ffdc>
+    <ffdc>SIZE</ffdc>
+    <!-- no callout, deconfig, gard tags as FW does not consume             -->
+  </hwpError>
+  <!-- ******************************************************************** -->
+  <hwpError>
+    <rc>RC_P10_MMIO_BAD_MULTICAST_TYPE_ERR</rc>
+    <description>
+      Procedure: p10_get_mmio, p10_put_mmio
+      Unsupported multicast type operation
+    </description>
+    <ffdc>TARGET</ffdc>
+    <ffdc>ADDR</ffdc>
+    <ffdc>PIB_ADDR</ffdc>
+    <ffdc>MULTICAST_TYPE</ffdc>
     <!-- no callout, deconfig, gard tags as FW does not consume             -->
   </hwpError>
   <!-- ******************************************************************** -->
