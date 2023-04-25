@@ -5,7 +5,7 @@
 #
 # OpenPOWER HCODE Project
 #
-# COPYRIGHT 2015,2018
+# COPYRIGHT 2015,2023
 # [+] International Business Machines Corp.
 #
 #
@@ -25,9 +25,24 @@
 
 # Makefile to define useful common flags for all environments.
 
-LOCALCOMMONFLAGS += -O3 -fPIC -Wall -Wformat=0
+LOCALCOMMONFLAGS += -O3 -fPIC -Wall -Werror
+LOCALCOMMONFLAGS += -Wno-unused-label
+LOCALCOMMONFLAGS += -fsigned-char
+LOCALCOMMONFLAGS += -fno-inline-functions-called-once
 LOCALLDFLAGS += --std=gnu++11
 ifeq ($(UNAME),Linux)
 LOCALLDFLAGS += -rdynamic
 endif
 LOCALCXXFLAGS += --std=gnu++11
+LOCALCXXFLAGS += -fexceptions
+LOCALCXXFLAGS += -Wno-conversion-null
+ifeq ($(word 1, $(subst ., ,$(RHEL_VER))), 8)
+LOCALCXXFLAGS += -D_GLIBCXX_USE_CXX11_ABI=0
+endif
+ifeq ($(strip $(SYS_RHEL7)),true)
+LOCALCXXFLAGS += -D_SYS_RHEL7_
+endif
+
+LOCALCFLAGS += -fno-strict-aliasing
+LOCALCFLAGS += -pipe
+
