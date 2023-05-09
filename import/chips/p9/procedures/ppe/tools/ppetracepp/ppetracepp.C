@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER HCODE Project                                                */
 /*                                                                        */
-/* COPYRIGHT 2015,2017                                                    */
+/* COPYRIGHT 2015,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1094,7 +1094,8 @@ int main(int argc, char** argv)
 
         string pwd;
         FILE* PWD = popen("pwd", "r");
-        fgets(buf, MAX_BUFFER, PWD);
+        char* ignore = fgets(buf, MAX_BUFFER, PWD);
+        (void)ignore; // catch the return so that the compiler doesn't complain; return value isn't actually used.
         pwd = buf;
         pclose(PWD);
         time_t tt = time(NULL);
