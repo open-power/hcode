@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2022                                                    */
+/* COPYRIGHT 2020,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -48,11 +48,6 @@
 // Error Log payload for the 2 errors to be committed by local GPE
 uint8_t G_errLogUnrec[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
 
-// @TODO via RTC 274373: QME hcode size: Temporarly disable unused info logs
-//#ifndef __PPE_QME
-#if !defined(__PPE_QME)
-uint8_t G_errLogInfo [ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
-#endif
 
 // Order of error logs in this table should match relative order per GPE as per
 // elog_entry_index. This table is set up to point to the error log payloads,
@@ -88,13 +83,10 @@ void initQmeErrSlots (const uint8_t* i_pElogPayloadBase)
 
         do
         {
-            uint32_t qmeSlotUnrec = ERRL_SLOT_QME_UNREC_BASE + (qmeId * 2);
-            uint32_t qmeSlotInf = ERRL_SLOT_QME_INFO_BASE + (qmeId * 2);
+            uint32_t qmeSlotUnrec = ERRL_SLOT_QME_UNREC_BASE + qmeId;
 
             G_gpeErrLogs[qmeSlotUnrec] = (errlHndl_t) (i_pElogPayloadBase +
                                          (ERRL_MAX_ENTRY_SZ * qmeSlotUnrec));
-            G_gpeErrLogs[qmeSlotInf] = (errlHndl_t) (i_pElogPayloadBase +
-                                       (ERRL_MAX_ENTRY_SZ * qmeSlotInf));
         }
         while (MAX_QUADS > ++qmeId);
     }
@@ -105,7 +97,7 @@ uint32_t getQmeElogSlotAddr ( const uint8_t i_qmeId,
                               uint64_t**    o_ppQmeElogSlot )
 {
     uint32_t status = ERRL_STATUS_SUCCESS;
-    uint32_t slot = ERRL_SLOT_QMES_BASE + ((i_qmeId * 2) + i_elogSlotIndex);
+    uint32_t slot = ERRL_SLOT_QMES_BASE + (i_qmeId + i_elogSlotIndex);
     *o_ppQmeElogSlot = NULL;
 
     do
@@ -158,7 +150,7 @@ uint32_t reportQmeError (const uint8_t   i_qmeId,
                          const hcode_elog_entry_t i_elogEntry )
 {
     uint32_t status = ERRL_STATUS_SUCCESS;
-    uint32_t slot = ERRL_SLOT_QMES_BASE + ((i_qmeId * 2) + i_elogSlotIndex);
+    uint32_t slot = ERRL_SLOT_QMES_BASE + (i_qmeId  + i_elogSlotIndex);
 
 
     if (ERRL_SLOT_QMES_MAX < slot)
@@ -208,7 +200,6 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_PGPE;
                 G_errlConfigData.gpeBaseSlot = ERRL_SLOT_PGPE_BASE;
                 G_gpeErrLogs[ERRL_SLOT_PGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
-                G_gpeErrLogs[ERRL_SLOT_PGPE_INF] = (errlHndl_t) &G_errLogInfo;
                 break;
 
 
@@ -217,7 +208,6 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_XGPE;
                 G_errlConfigData.gpeBaseSlot = ERRL_SLOT_XGPE_BASE;
                 G_gpeErrLogs[ERRL_SLOT_XGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
-                G_gpeErrLogs[ERRL_SLOT_XGPE_INF] = (errlHndl_t) &G_errLogInfo;
                 break;
 #endif //  not __PPE_QME
 
@@ -229,8 +219,6 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 // EID range of each QME is kept unique to avoid entry conflict
                 G_errlConfigData.errId = (G_errlConfigData.ppeId & 0x0f) << 5;
                 G_gpeErrLogs[ERRL_SLOT_QME_UNREC_BASE] = (errlHndl_t) &G_errLogUnrec;
-                // @TODO via RTC 274373: QME hcode size: Temporarly disable unused info logs
-                // G_gpeErrLogs[ERRL_SLOT_QME_INFO_BASE] = (errlHndl_t) &G_errLogInfo;
                 break;
 
             default:
@@ -314,32 +302,6 @@ uint8_t getErrSlotNumAndErrId (
                               );
                 break;
         }
-    }
-    else if (ERRL_SEV_INFORMATIONAL == i_severity)
-    {
-        switch (G_errlConfigData.source)
-        {
-#ifndef __PPE_QME // save some code space on QME
-
-            case ERRL_SOURCE_PGPE:
-                l_slotmask = ERRL_SLOT_MASK_PGPE_INFO;
-                break;
-
-            case ERRL_SOURCE_XGPE:
-                l_slotmask = ERRL_SLOT_MASK_XGPE_INFO;
-                break;
-#endif
-
-            case ERRL_SOURCE_QME:
-                l_slotmask = ~(ERRL_SLOT_MASK_QME_INFO_BASE >>
-                               (( G_errlConfigData.ppeId & 0x0f ) << 1)
-                              );
-                break;
-        }
-    }
-    else
-    {
-        // do nothing
     }
 
     PK_TRACE_INF ("Source 0x%X Sev 0x%X l_slotmask 0x%X",
@@ -476,83 +438,16 @@ uint32_t copyTraceBufferPartial ( void* i_pDst,
 {
     PK_TRACE_INF (">> copyTraceBufferPartial: size %d bytes", i_size);
     uint16_t l_bytesCopied = 0;
-    const uint32_t l_trHdrSz = sizeof(PkTraceBuffer) - PK_TRACE_SZ;
-    const uint32_t l_trStateOffset = g_pk_trace_buf.state.offset &
-                                     PK_TRACE_CB_MASK;
-    uint32_t l_szBytes = l_trHdrSz; // first copy trace header
-    bool     l_buffWrapped = false;
-    uint32_t l_offset = l_trHdrSz;
 
-    //const uint16_t pk_tr_size = g_pk_trace_buf.size;
-    //const uint16_t pk_tr_sz_max = PK_TRACE_SZ;
-    //const uint32_t pk_tr_state_offset = g_pk_trace_buf.state.offset;
-
-    if (NULL != i_pDst)
+    if ( NULL != i_pDst )
     {
         // copy the trace buffer header
-        //PK_TRACE_INF ("Copying Tr Buff Hdr %d bytes", l_szBytes);
         memcpy ( i_pDst,
                  (void*) &g_pk_trace_buf,
-                 l_szBytes );
-        l_bytesCopied = l_szBytes;
-
-        // If size being copied is less than what was in the header, adjust
-        // the necessary fields to suit that partial buffer in new header
-        // Can't do this in PPE due to alignment restrictions .. compensate in
-        // parser world
-#if 0
-
-        if (l_pPkTraceBuf->size > i_size)
-        {
-            l_pPkTraceBuf->size = i_size;
-            l_pPkTraceBuf->state.offset = i_size;
-        }
-
-#endif
-
-        l_szBytes = i_size - l_szBytes; // account for copied trace header bytes
-
-        if (l_trStateOffset >= l_szBytes)
-        {
-            // TEs in requested size fit in -un-wrapped part of buffer
-            l_offset +=  l_trStateOffset - l_szBytes;
-        }
-        else
-        {
-            // requested size has some TEs in the wrapped part of the buffer
-            // copy wrapped chunk of TEs 1st, then copy the -un-wrapped TEs
-            // so that we have TEs in rev-chrono after both copies
-            l_buffWrapped = true;
-            l_szBytes -= l_trStateOffset;
-            l_offset += PK_TRACE_SZ - l_szBytes;
-        }
-
-        // copy (append to header) the first chunk of TEs
-        //PK_TRACE_INF ("Copying 1st chunk of TEs @ %d %d bytes",
-        //              l_offset, l_szBytes);
-        memcpy ( i_pDst + l_bytesCopied,
-                 (void*)(&g_pk_trace_buf) + l_offset,
-                 l_szBytes );
-        l_bytesCopied += l_szBytes;
-
-        if (l_buffWrapped == true)
-        {
-            // Now copy the -un-wrapped chunk of TEs
-            l_szBytes = l_trStateOffset;
-            l_offset = l_trHdrSz;
-
-            // copy (append to 1st chunk) the 2nd chunk of wrapped trace entries
-            //PK_TRACE_INF ("Copying 2nd chunk of wrapped TEs @%d %d bytes",
-            //              l_offset, l_szBytes);
-            memcpy ( i_pDst + l_bytesCopied,
-                     (void*)(&g_pk_trace_buf) + l_offset,
-                     l_szBytes );
-            l_bytesCopied += l_szBytes;
-        }
+                 i_size );
+        l_bytesCopied = i_size;
     }
 
-    // PK_TRACE_INF ("buf.state.offset %d offset.wrapped %d buf.sz %d buf.max %d",
-    //              pk_tr_state_offset++, l_trStateOffset++, pk_tr_size, pk_tr_sz_max++);
 
     PK_TRACE_INF ( "<< copyTraceBufferPartial: size %d copied %d",
                    i_size, l_bytesCopied );
@@ -1161,12 +1056,16 @@ uint32_t  ppeLogError (
             p_callOuts = p_callOuts->pNext;
         }
 
+        PK_TRACE( "Critical eLOG After Callout" );
+
         if (ERRL_STATUS_SUCCESS == status)
         {
             // 5. Commit error log to be noticed for retrieval
             //    note: err gets NULL here on success
             status = commitErrl (&err);
         }
+
+        PK_TRACE( "Critical eLOG After Commit" );
     }
 
     if (err)

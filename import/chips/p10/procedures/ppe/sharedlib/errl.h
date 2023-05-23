@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2021                                                    */
+/* COPYRIGHT 2020,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -33,8 +33,8 @@
 extern "C" {
 #endif
 
-// Max size of a HCode error log (1024 bytes)
-#define ERRL_MAX_ENTRY_SZ 0x400
+// Max size of a HCode error log (2048 bytes)
+#define ERRL_MAX_ENTRY_SZ 0x800
 
 // Min size (bytes) of user data that can be added, excluding the header
 #define ERRL_USR_DATA_SZ_MIN 128
@@ -42,7 +42,7 @@ extern "C" {
 // Max registers (XIRs) to be collected for belly-up PPEs
 #define ERRL_PPE_REGS_MAX 5
 #define ERRL_PPE_SCRBRD_SIZE 256
-#define ERRL_PPE_TRACE_SIZE  512
+#define ERRL_PPE_TRACE_SIZE  1024
 
 /// Status code of error logging from error logging infrastructure
 enum errlStatusCodes

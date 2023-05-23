@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -535,7 +535,6 @@ void pgpe_wov_ocs_update_dirty()
     if(G_pgpe_wov_ocs.overv_max_cnt == 3 &&
        !G_overv_max_cnt_log)
     {
-        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOV_OVERV_MAX_CNT);
         G_overv_max_cnt_log = 1;
     }
 

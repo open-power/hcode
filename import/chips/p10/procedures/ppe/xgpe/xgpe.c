@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2022                                                    */
+/* COPYRIGHT 2020,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -138,13 +138,6 @@ uint32_t xgpe_errl_create(const uint32_t i_rc,
         }
     }
 
-    if ( i_sev == ERRL_SEV_INFORMATIONAL)
-    {
-        PPE_LOG_ERR_INF ( i_rc, i_extRc, i_modId,
-                          i_usrd1, i_usrd2, i_usrd3,
-                          NULL, status );
-    }
-
     return status;
 }
 
@@ -189,19 +182,4 @@ void createPgpelog()
                            &usrDtlsSect, NULL, status );
 
     PK_TRACE ("createPgpelog critical: status %d",  status);
-
-    /*
-     * @errortype
-     * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
-     * @reasoncode  XGPE_RC_PGPE_INFO_ERR
-     * @devdesc     Supplementary log for Error Detected from PGPE
-     * @custdesc    Runtime embedded firmware error, detected pgpe error
-     */
-    getPpePkTraceUsrDtls(ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_pk_trace_buf, &usrDtlsSect);
-
-    PPE_LOG_ERR_INF ( XGPE_RC_PGPE_INFO_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
-                      0, 0, 0,
-                      &usrDtlsSect, status );
-
-    PK_TRACE ("createPgpelog info: status %d",  status);
 }
