@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021,2022                                                    */
+/* COPYRIGHT 2021,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -695,37 +695,6 @@ void pgpe_error_init()
     G_pgpe_error.first_crit_err_idx = 0;
     G_pgpe_error.last_crit_err_idx = 0;
     IOTA_MC_HANDLER(pgpe_error_machine_check_handler);
-}
-
-
-
-void pgpe_error_info_log(uint32_t pgpe_err_id)
-{
-    //Create Info Error Log
-    uint32_t o_status;
-    PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
-                    G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
-                    G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
-                    0x0,
-                    0x0,
-                    0x0,
-                    NULL,
-                    o_status);
-    PK_TRACE_INF("ERRL: o_status=0x%x", o_status); //TODO Check error code
-}
-
-void pgpe_error_info_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3)
-{
-    uint32_t o_status;
-    PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
-                    G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
-                    G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
-                    usrdata1,
-                    usrdata2,
-                    usrdata3,
-                    NULL,
-                    o_status);
-    PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
 
 void pgpe_error_critical_log(uint32_t pgpe_err_id)

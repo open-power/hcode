@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2021                                                    */
+/* COPYRIGHT 2020,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -34,9 +34,9 @@ extern "C" {
 #endif
 
 // Size of traces to add to ERRL_USR_DTL_TRACE_DATA
-#define ERRL_TRACE_DATA_SZ_PGPE 0x200
-#define ERRL_TRACE_DATA_SZ_XGPE 0x200
-#define ERRL_TRACE_DATA_SZ_QME  0x200
+#define ERRL_TRACE_DATA_SZ_PGPE 0x438
+#define ERRL_TRACE_DATA_SZ_XGPE 0x438
+#define ERRL_TRACE_DATA_SZ_QME  0x438
 
 // Defines used to programmatically arrive at QME instance slot mask
 #define ERRL_SLOT_MASK_QME_UNREC_BASE 0x80000000
@@ -60,26 +60,15 @@ typedef enum
 {
     ERRL_SLOT_MASK_DEFAULT        = 0xFFFFFFFF,
     ERRL_SLOT_MASK_QME0_UNREC     = 0x7FFFFFFF,
-    ERRL_SLOT_MASK_QME0_INFO      = 0xBFFFFFFF,
-    ERRL_SLOT_MASK_QME1_UNREC     = 0xDFFFFFFF,
-    ERRL_SLOT_MASK_QME1_INFO      = 0xEFFFFFFF,
-    ERRL_SLOT_MASK_QME2_UNREC     = 0xF7FFFFFF,
-    ERRL_SLOT_MASK_QME2_INFO      = 0xFBFFFFFF,
-    ERRL_SLOT_MASK_QME3_UNREC     = 0xFDFFFFFF,
-    ERRL_SLOT_MASK_QME3_INFO      = 0xFEFFFFFF,
-    ERRL_SLOT_MASK_QME4_UNREC     = 0xFF7FFFFF,
-    ERRL_SLOT_MASK_QME4_INFO      = 0xFFBFFFFF,
-    ERRL_SLOT_MASK_QME5_UNREC     = 0xFFDFFFFF,
-    ERRL_SLOT_MASK_QME5_INFO      = 0xFFEFFFFF,
-    ERRL_SLOT_MASK_QME6_UNREC     = 0xFFF7FFFF,
-    ERRL_SLOT_MASK_QME6_INFO      = 0xFFFBFFFF,
-    ERRL_SLOT_MASK_QME7_UNREC     = 0xFFFDFFFF,
-    ERRL_SLOT_MASK_QME7_INFO      = 0xFFFEFFFF,
-    ERRL_SLOT_MASK_PGPE_UNREC     = 0xFFFF7FFF,
-    ERRL_SLOT_MASK_PGPE_INFO      = 0xFFFFBFFF,
-    ERRL_SLOT_MASK_XGPE_UNREC     = 0xFFFFDFFF,
-    ERRL_SLOT_MASK_XGPE_INFO      = 0xFFFFEFFF,
-    // Max. available slots for 12 more logs
+    ERRL_SLOT_MASK_QME1_UNREC     = 0xBFFFFFFF,
+    ERRL_SLOT_MASK_QME2_UNREC     = 0xDFFFFFFF,
+    ERRL_SLOT_MASK_QME3_UNREC     = 0xEFFFFFFF,
+    ERRL_SLOT_MASK_QME4_UNREC     = 0xF7FFFFFF,
+    ERRL_SLOT_MASK_QME5_UNREC     = 0xFBFFFFFF,
+    ERRL_SLOT_MASK_QME6_UNREC     = 0xFDFFFFFF,
+    ERRL_SLOT_MASK_QME7_UNREC     = 0xFEFFFFFF,
+    ERRL_SLOT_MASK_PGPE_UNREC     = 0xFF7FFFFF,
+    ERRL_SLOT_MASK_XGPE_UNREC     = 0xFFBFFFFF,
 } ERRL_SLOT_MASK;
 
 // Index into array of error log entries in hcode_error_table_t
@@ -92,29 +81,18 @@ enum elog_entry_index
     ERRL_SLOT_QMES_BASE     = 0x00,
     ERRL_SLOT_QME_UNREC_BASE = ERRL_SLOT_TBL_BASE,
     ERRL_SLOT_QME0_UNREC    = 0x00, // 0
-    ERRL_SLOT_QME_INFO_BASE = 0x01,
-    ERRL_SLOT_QME0_INF      = 0x01, // 1
-    ERRL_SLOT_QME1_UNREC    = 0x02,
-    ERRL_SLOT_QME1_INF      = 0x03,
-    ERRL_SLOT_QME2_UNREC    = 0x04,
-    ERRL_SLOT_QME2_INF      = 0x05,
-    ERRL_SLOT_QME3_UNREC    = 0x06,
-    ERRL_SLOT_QME3_INF      = 0x07,
-    ERRL_SLOT_QME4_UNREC    = 0x08,
-    ERRL_SLOT_QME4_INF      = 0x09,
-    ERRL_SLOT_QME5_UNREC    = 0x0A,
-    ERRL_SLOT_QME5_INF      = 0x0B,
-    ERRL_SLOT_QME6_UNREC    = 0x0C,
-    ERRL_SLOT_QME6_INF      = 0x0D,
-    ERRL_SLOT_QME7_UNREC    = 0x0E, // 14
-    ERRL_SLOT_QME7_INF      = 0x0F, // 15
-    ERRL_SLOT_QMES_MAX      = 0x0F,
-    ERRL_SLOT_PGPE_BASE     = 0x10,
-    ERRL_SLOT_PGPE_UNREC    = 0x10, // 16
-    ERRL_SLOT_PGPE_INF      = 0x11, // 17
-    ERRL_SLOT_XGPE_BASE     = 0x12,
-    ERRL_SLOT_XGPE_UNREC    = 0x12, // 18
-    ERRL_SLOT_XGPE_INF      = 0x13, // 19
+    ERRL_SLOT_QME1_UNREC    = 0x01,
+    ERRL_SLOT_QME2_UNREC    = 0x02,
+    ERRL_SLOT_QME3_UNREC    = 0x03,
+    ERRL_SLOT_QME4_UNREC    = 0x04,
+    ERRL_SLOT_QME5_UNREC    = 0x05,
+    ERRL_SLOT_QME6_UNREC    = 0x06,
+    ERRL_SLOT_QME7_UNREC    = 0x07, // 7
+    ERRL_SLOT_QMES_MAX      = 0x07,
+    ERRL_SLOT_PGPE_BASE     = 0x08,
+    ERRL_SLOT_PGPE_UNREC    = 0x08, // 8
+    ERRL_SLOT_XGPE_BASE     = 0x09,
+    ERRL_SLOT_XGPE_UNREC    = 0x09, // 9
     ERRL_SLOT_INVALID       = 0xFF, // default invalid
 };
 
