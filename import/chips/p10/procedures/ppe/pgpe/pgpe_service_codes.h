@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2022                                                    */
+/* COPYRIGHT 2018,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -28,21 +28,21 @@
 
 enum pgpeModuleId
 {
-    PGPE_ERR_MODULE_AVSBUS_DRIVER   =       0x1,
-    PGPE_ERR_MODULE_DDS             =       0x2,
-    PGPE_ERR_MODULE_DPLL            =       0x3,
-    PGPE_ERR_MODULE_EVENT_MANAGER   =       0x4,
-    PGPE_ERR_MODULE_EVENT_PROCESS   =       0x5,
-    PGPE_ERR_MODULE_EVENT_TABLE     =       0x6,
-    PGPE_ERR_MODULE_GPPB            =       0x7,
-    PGPE_ERR_MODULE_OCC_FAULT       =       0x8,
-    PGPE_ERR_MODULE_PVREF_FAULT     =       0x9,
-    PGPE_ERR_MODULE_XGPE_FAULT      =       0xA,
-    PGPE_ERR_MODULE_XSTOP           =       0xB,
-    PGPE_ERR_MODULE_IPC             =       0xC,
-    PGPE_ERR_MODULE_FIT             =       0xD,
-    PGPE_ERR_MODULE_OCC             =       0xE,
-    PGPE_ERR_MODULE_PSTATE          =       0xF,
+    PGPE_ERR_MODULE_AVSBUS_DRIVER   =       0x01,
+    PGPE_ERR_MODULE_DDS             =       0x02,
+    PGPE_ERR_MODULE_DPLL            =       0x03,
+    PGPE_ERR_MODULE_EVENT_MANAGER   =       0x04,
+    PGPE_ERR_MODULE_EVENT_PROCESS   =       0x05,
+    PGPE_ERR_MODULE_EVENT_TABLE     =       0x06,
+    PGPE_ERR_MODULE_GPPB            =       0x07,
+    PGPE_ERR_MODULE_OCC_FAULT       =       0x08,
+    PGPE_ERR_MODULE_PVREF_FAULT     =       0x09,
+    PGPE_ERR_MODULE_XGPE_FAULT      =       0x0A,
+    PGPE_ERR_MODULE_XSTOP           =       0x0B,
+    PGPE_ERR_MODULE_IPC             =       0x0C,
+    PGPE_ERR_MODULE_FIT             =       0x0D,
+    PGPE_ERR_MODULE_OCC             =       0x0E,
+    PGPE_ERR_MODULE_PSTATE          =       0x0F,
     PGPE_ERR_MODULE_RESCLK          =       0x10,
     PGPE_ERR_MODULE_THR_CTRL        =       0x11,
     PGPE_ERR_MODULE_UIH             =       0x12,
@@ -61,9 +61,9 @@ enum pgpeReasonCode
     PGPE_ERR_REASON_CODE_XGPE       =     0x70,
     PGPE_ERR_REASON_CODE_IRQ_FAULT  =     0x80,
     PGPE_ERR_REASON_CODE_PSTATES    =     0x90,
-    PGPE_ERR_REASON_CODE_WOF        =     0xb0,
-    PGPE_ERR_REASON_CODE_INJECT     =     0xc0,
-    PGPE_ERR_REASON_CODE_WOV_OCS    =     0xd0,
+    PGPE_ERR_REASON_CODE_WOF        =     0xB0,
+    PGPE_ERR_REASON_CODE_INJECT     =     0xC0,
+    PGPE_ERR_REASON_CODE_WOV_OCS    =     0xD0,
 };
 
 enum pgpeExtReasonCode
@@ -79,11 +79,11 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR             =   0x1017,
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL       =   0x1018,
     PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR             =   0x1019,
-    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL      =   0x101a,
-    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR            =   0x101b,
-    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION       =   0x101c,
-    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE                =   0x101d,
-    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT            =   0x101e,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL      =   0x101A,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR            =   0x101B,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION       =   0x101C,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE                =   0x101D,
+    PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT            =   0x101E,
 
     //CURRENT
     PGPE_ERR_EXT_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT           =   0x1030,
@@ -127,36 +127,36 @@ enum pgpeExtReasonCode
     PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_AND_PMCR_OWNER_NOT_OCC          =   0x1097,
     PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_PSTATE_STOPPED               =   0x1098,
     PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_IN_SAFE_MODE                    =   0x1099,
-    PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_WHILE_PENDING                   =   0x109a,
-    PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED              =   0x109b,
-    PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC              =   0x109c,
-    PGPE_ERR_EXT_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED              =   0x109d,
+    PGPE_ERR_EXT_CODE_PGPE_SET_PMCR_WHILE_PENDING                   =   0x109A,
+    PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PSTATE_STOPPED              =   0x109B,
+    PGPE_ERR_EXT_CODE_PGPE_PCB_TYPE1_IN_PMCR_OWNER_OCC              =   0x109C,
+    PGPE_ERR_EXT_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED              =   0x109D,
 
     //WOF
-    PGPE_ERR_EXT_CODE_PGPE_WOF_NULL_VRT_PTR                         =   0x10b0,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_SAFE_MODE                     =   0x10b1,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED                =   0x10b2,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_WHILE_PENDING                    =   0x10b3,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_WHILE_PENDING                   =   0x10b4,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_SAFE_MODE                    =   0x10b5,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_PSTATE_STOPPED               =   0x10b6,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED             =   0x10b7,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED       =   0x10b8,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED       =   0x10b9,
-    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT              =   0x10ba,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_NULL_VRT_PTR                         =   0x10B0,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_SAFE_MODE                     =   0x10B1,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED                =   0x10B2,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_VRT_WHILE_PENDING                    =   0x10B3,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_WHILE_PENDING                   =   0x10B4,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_SAFE_MODE                    =   0x10B5,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_IN_PSTATE_STOPPED               =   0x10B6,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED             =   0x10B7,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED       =   0x10B8,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED       =   0x10B9,
+    PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_ENABLE_WITHOUT_VRT              =   0x10BA,
 
     //WOV
-    PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT                        =   0x10c0,
-    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HOC                       =   0x10c1,
-    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HUC                       =   0x10c2,
-    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OCSTH                     =   0x10c3,
-    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OKTH                      =   0x10c4,
-    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OV                        =   0x10c5,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_OVERV_MAX_CNT                        =   0x10C0,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HOC                       =   0x10C1,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HUC                       =   0x10C2,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OCSTH                     =   0x10C3,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OKTH                      =   0x10C4,
+    PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OV                        =   0x10C5,
 
     //Error Injection
-    PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL            =   0x10d0,
-    PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO                =   0x10d1,
-    PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT                         =   0x10d2,
+    PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_CRITICAL            =   0x10D0,
+    PGPE_ERR_EXT_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO                =   0x10D1,
+    PGPE_ERR_EXT_CODE_PGPE_FIT_ERROR_INJECT                         =   0x10D2,
 };
 
 

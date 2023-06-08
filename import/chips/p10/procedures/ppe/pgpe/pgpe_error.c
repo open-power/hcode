@@ -625,7 +625,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_WOV_OCS
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
-    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OC
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HOC
     * @devdesc     PStates: WOV Heavy Droop over OCS threshold
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HOC}, //62
@@ -635,7 +635,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_WOV_OCS
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
-    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OC
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HUC
     * @devdesc     PStates: WOV Heavy Droop under OCS threshold
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_HUC}, //63
@@ -645,7 +645,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_WOV_OCS
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
-    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OC
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OCSTH
     * @devdesc     PStates: WOV over OCS threshold without droop
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OCSTH}, //64
@@ -655,7 +655,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_WOV_OCS
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
-    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OC
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OKTH
     * @devdesc     PStates: WOV over OCS threshold without droop
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OKTH}, //65
@@ -665,7 +665,7 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     * @errortype
     * @moduleid    PGPE_ERR_MODULE_WOV_OCS
     * @reasoncode  PGPE_ERR_REASON_CODE_WOV_OCS
-    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OC
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OV
     * @devdesc     PStates: WOV over OCS threshold without droop
     */
     {PGPE_ERR_MODULE_WOV_OCS, PGPE_ERR_REASON_CODE_WOV_OCS, 0, PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OV}, //66
