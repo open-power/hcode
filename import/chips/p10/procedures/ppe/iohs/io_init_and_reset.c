@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -188,7 +188,7 @@ const t_data_rate_settings c_data_rate_settings_32g =
 const t_data_rate_settings c_data_rate_settings_38g =
 {
     .rx_ctle_peak2_h_sel        = 1, // H3
-    .rx_freq_adjust             = 0x0D,
+    .rx_freq_adjust             = 0x1E,
     .tx_d2_ctrl                 = 2,
     .tx_d2_div_ctrl             = 2,
     .rx_bist_freq_adjust_8xx    = 0b11,
@@ -340,7 +340,15 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, rx_loff_timeout, 10, read_modify_write); //pg
 
     put_ptr_field(gcr_addr, rx_iref_clock_dac  , 0x2, read_modify_write); //pg
-    put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write); //pg
+
+    if (l_data_rate == 3)
+    {
+        put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x3, read_modify_write); //pg
+    }
+    else
+    {
+        put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write); //pg
+    }
 
 
     // HW548766/HW560156: Set rx_iref_vset_dac to 3 in BIST for P10 DD1 vertical chiplets at >=32Gbps

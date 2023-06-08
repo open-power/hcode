@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -794,19 +794,6 @@ static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL4_PL_EN_LEN = 5;
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL4_PL_SEL = 56;
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL4_PL_SEL_LEN = 5;
 //<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL4_PL]
-// omi/reg00001.H
-
-//>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL]
-static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL = 0x8004244010012c3full;
-
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_FIFO_L2U_DLY = 48;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_FIFO_L2U_DLY_LEN = 3;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_UNLOAD_CLK_DISABLE = 56;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_RXCAL = 57;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_UNLOAD_SEL = 58;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_UNLOAD_SEL_LEN = 3;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL_FIFO_HOLD = 61;
-//<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_MODE2_PL]
 // omi/reg00001.H
 
 //>> [TXPACKS_1_DD_3_TX_BIT_REGS_CNTL11_PL]
