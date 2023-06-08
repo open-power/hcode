@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021,2022                                                    */
+/* COPYRIGHT 2021,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -226,7 +226,6 @@ uint32_t handleQmeErrl (const uint32_t i_quadId,
          * @userdata1   QME Quad Id
          * @userdata2   QME Error Code
          * @userdata3   Failed Cores
-         * @userdata4   XGPE Extended Reason Code
          * @devdesc     XGPE detected a QME fault error log
          * @custdesc    Runtime embedded firmware error, QME fault detected
          */

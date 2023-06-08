@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021,2022                                                    */
+/* COPYRIGHT 2021,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -44,10 +44,10 @@ enum xgpeExtReasonCode
 
 enum xgpeModuleId
 {
-    XGPE_MODID_HANDLE_QME_ERRL  = 0x0001,
-    XGPE_MODID_FIT_HANDLER      = 0x0002,
-    XGPE_HCODE_SCOM             = 0x0003,
-    XGPE_MODID_HANDLE_PGPE_ERRL = 0x0004,
+    XGPE_MODID_HANDLE_QME_ERRL  = 0x01,
+    XGPE_MODID_FIT_HANDLER      = 0x02,
+    XGPE_HCODE_SCOM             = 0x03,
+    XGPE_MODID_HANDLE_PGPE_ERRL = 0x04,
 };
 
 #endif

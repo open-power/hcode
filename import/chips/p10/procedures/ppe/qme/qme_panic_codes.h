@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2022                                                    */
+/* COPYRIGHT 2016,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -101,10 +101,10 @@
 * @moduleid    QME_MODULE_ID_BASE_ERR
 * @reasoncode  ERR_REASON_ID_QME_SETUP
 * @userdata2   qme_scratchB
-* @userdata3   qme_scratchA
-* @userdata4   doorbell1_msg
+* @userdata3   doorbell1_msg
+* @userdata4   QME_STOP_BLOCK_PROTOCOL_TARGET_ERROR
 * @devdesc     targets used for block stop/wake detect mismatch
-* @custdesc    Microcode stop service suspend error
+* @custdesc    Runtime embedded firmware stop service suspend error
 */
 //UNUSED                                  = 0x1c06,
 //UNUSED                                  = 0x1c07,
@@ -135,7 +135,7 @@
 /*
 * @errortype
 * @moduleid    QME_MODULE_ID_BASE_ERR
-* @reasoncode  ERR_REASON_ID_MACH_CHECK
+* @reasoncode  ERR_REASON_ID_IRQ_ERR
 * @userdata1   sprg0
 * @userdata2   srr0
 * @userdata3   edr

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -155,7 +155,6 @@ void handle_error_inject()
          * @userdata1   OCC Flag 3
          * @userdata2   Error Pattern
          * @userdata3   Error Pattern
-         * @userdata4   0
          * @devdesc     XGPE detected an user error injection
          * @custdesc    Runtime embedded firmware error,during error injection
          */
