@@ -680,6 +680,126 @@ pgpe_error_code_t G_PGPE_ERROR_CODES[] =
     */
     {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT},//67
 
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_ONGOING_TIMEOUT
+    * @devdesc     AVS: Status READ command timed out
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_ONGOING_TIMEOUT},//68
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_GOOD_CRC_NO_ACTION
+    * @devdesc     AVS: Status READ command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_GOOD_CRC_NO_ACTION},//69
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_RESYNC_ERROR
+    * @devdesc     AVS: Status READ command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_RESYNC_ERROR},//70
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_NOT_IN_PGPE_CONTROL
+    * @devdesc     AVS: Status READ command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_NOT_IN_PGPE_CONTROL},//71
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_UNKNOWN_ERROR
+    * @devdesc     AVS: Status READ command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_READ_UNKNOWN_ERROR},//72
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_ONGOING_TIMEOUT
+    * @devdesc     AVS: Status WRITE command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_ONGOING_TIMEOUT},//73
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_GOOD_CRC_NO_ACTION
+    * @devdesc     AVS: Status WRITE command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_GOOD_CRC_NO_ACTION},//74
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_RESYNC_ERROR
+    * @devdesc     AVS: Status WRITE command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_RESYNC_ERROR},//75
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_NOT_IN_PGPE_CONTROL
+    * @devdesc     AVS: Status WRITE command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_NOT_IN_PGPE_CONTROL},//76
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_AVSBUS_DRIVER
+    * @reasoncode  PGPE_ERR_REASON_CODE_VOLTAGE
+    * @userdata4   PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_UNKNOWN_ERROR
+    * @devdesc     AVS: Status WRITE command did not complete
+    * @custdesc    Runtime embedded firmware error during AVS voltage operation
+    */
+    {PGPE_ERR_MODULE_AVSBUS_DRIVER, PGPE_ERR_REASON_CODE_VOLTAGE, 0, PGPE_ERR_EXT_CODE_AVSBUS_STATUS_WRITE_UNKNOWN_ERROR},//77
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_OCC
+    * @reasoncode  PGPE_ERR_REASON_CODE_CURRENT
+    * @userdata4   PGPE_ERR_EXT_CODE_OCC_AVG_CURRENT_TOO_LOW_ERROR
+    * @devdesc     OCC Avergate current provided to OCC lower than ever expected
+    * @custdesc    Runtime embedded firmware error during OCC current operation
+    */
+    {PGPE_ERR_MODULE_OCC, PGPE_ERR_REASON_CODE_CURRENT, 0, PGPE_ERR_EXT_CODE_OCC_AVG_CURRENT_TOO_LOW_ERROR},//78
+
+    /*
+    * @errortype
+    * @moduleid    PGPE_ERR_MODULE_EVENT_PROCESS
+    * @reasoncode  PGPE_ERR_REASON_CODE_WOF
+    * @userdata4   PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_CEFFRATIO_ZERO
+    * @devdesc     The computed CeffRatio in the VRT message is zero
+    * @custdesc    Runtime embedded firmware error during WOF operation
+    */
+    {PGPE_ERR_MODULE_EVENT_PROCESS, PGPE_ERR_REASON_CODE_WOF, 0, PGPE_ERR_EXT_CODE_PGPE_WOF_CTRL_CEFFRATIO_ZERO},//79
+
 };
 
 
@@ -774,6 +894,7 @@ void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dt
                          o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
 }
+
 
 void pgpe_error_notify_critical(uint32_t pgpe_err_id)
 {

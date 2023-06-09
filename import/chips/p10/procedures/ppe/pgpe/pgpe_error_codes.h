@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021,2022                                                    */
+/* COPYRIGHT 2021,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -127,15 +127,31 @@ enum  PGPE_ERR_CODE_IDX
     PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE                =   60,
     PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ZERO_VALUE                =   61,
 
+    //WOV
     PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_HOC                       =   62,
     PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_HUC                       =   63,
     PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OCSTH                     =   64,
     PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OKTH                      =   65,
     PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OV                        =   66,
     PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT            =   67,
+
+    //STATUS
+    PGPE_ERR_CODE_AVSBUS_STATUS_READ_ONGOING_TIMEOUT            =   68,
+    PGPE_ERR_CODE_AVSBUS_STATUS_READ_GOOD_CRC_NO_ACTION         =   69,
+    PGPE_ERR_CODE_AVSBUS_STATUS_READ_RESYNC_ERROR               =   70,
+    PGPE_ERR_CODE_AVSBUS_STATUS_READ_NOT_IN_PGPE_CONTROL        =   71,
+    PGPE_ERR_CODE_AVSBUS_STATUS_READ_UNKNOWN_ERROR              =   72,
+    PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_ONGOING_TIMEOUT           =   73,
+    PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_GOOD_CRC_NO_ACTION        =   74,
+    PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_RESYNC_ERROR              =   75,
+    PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_NOT_IN_PGPE_CONTROL       =   76,
+    PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_UNKNOWN_ERROR             =   77,
+
+    //INFO
+    PGPE_ERR_CODE_OCC_AVG_CURRENT_TOO_LOW_ERROR                 =   78,
+    PGPE_ERR_CODE_PGPE_WOF_CEFFRATIO_ZERO_ERROR                 =   79
+
+
 };
-
-
-
 
 #endif

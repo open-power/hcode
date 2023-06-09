@@ -856,7 +856,7 @@ void pgpe_process_wof_vrt(void* eargs)
             //If WOF is enabled
             if(pgpe_pstate_is_wof_enabled())
             {
-                //Vration fixed mode
+                //Vratio fixed mode
                 if (args->vratio_mode == PGPE_OCC_VRATIO_MODE_FIXED)
                 {
                     if (args->fixed_vratio_index > WOF_VRT_SIZE)
@@ -873,6 +873,15 @@ void pgpe_process_wof_vrt(void* eargs)
                 }
                 else
                 {
+                    if (args->vdd_ceff_ratio == 0 && G_pgpe_occ.ceffratio_info_log_cnt != 0)
+                    {
+                        pgpe_error_info_log_usrdata(PGPE_ERR_CODE_PGPE_WOF_CEFFRATIO_ZERO_ERROR,
+                                                    pgpe_pstate_get(pstate_curr),
+                                                    args->idd_vrt_ptr->vrtHeader.fields.vdd_ceff_id,
+                                                    (args->idd_vrt_ptr->vrtHeader.fields.ac_id << 16) | args->idd_vrt_ptr->vrtHeader.fields.io_id);
+                        G_pgpe_occ.ceffratio_info_log_cnt--;
+                    }
+
                     //Do vratio instantaneous calculation
                     pgpe_pstate_compute_vratio(pgpe_pstate_get(pstate_curr));
                     pgpe_pstate_compute_vindex();

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -32,6 +32,7 @@
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_thr_ctrl.h"
 #include "pgpe_wov_ocs.h"
+#include "pgpe_error.h"
 #include "p10_oci_proc.H"
 #include "p10_scom_eq_1.H"
 
@@ -107,6 +108,13 @@ void pgpe_occ_init()
 
     G_pgpe_occ.idd_ocs_accum_idx = 0;
     G_pgpe_occ.idd_ocs_running_avg = 0;
+
+    G_pgpe_occ.idd_min_avg_10ma = 0xFFFFFFFF;   // Set to the maximum for minimum detection
+
+    G_pgpe_occ.idd_current_scaling_factor = pgpe_gppb_get_current_scale_factor(CURRENT_SCALE_IDX_VDD);
+    G_pgpe_occ.current_info_log_cnt = 5;
+    G_pgpe_occ.ceffratio_info_log_cnt = 5;
+
     uint32_t i = 0;
 
     for (i = 0; i < PGPE_OCS_SAMPLE_SIZE; i++)
@@ -173,6 +181,27 @@ void pgpe_occ_produce_wof_values()
             G_pgpe_occ.idd_wof_avg_accum_ma = 0;
             G_pgpe_occ.ics_wof_avg_accum_ma = 0;
             G_pgpe_occ.ocs_avg_pct_wof_accum = 0;
+
+#if 0
+
+// Removed as INFO logs were removed from PGPE Hcode to allow for full traces to be captured for CRIT ones.
+// EWM: 306904 is looking to restore INFO log support
+            if (G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma <= 20 && G_pgpe_occ.current_info_log_cnt != 0)
+            {
+                pgpe_error_info_log_usrdata(PGPE_ERR_CODE_OCC_AVG_CURRENT_TOO_LOW_ERROR,
+                                            G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma,   // userdata1
+                                            G_pgpe_occ.idd_min_avg_10ma,                    // userdata2
+                                            G_pgpe_occ.idd_fit_avg_ma);                     // userdata3
+                G_pgpe_occ.current_info_log_cnt--;
+            }
+
+#endif
+
+            if (G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma < G_pgpe_occ.idd_min_avg_10ma)
+            {
+                G_pgpe_occ.idd_min_avg_10ma = G_pgpe_occ.pwof_val->dw1.fields.idd_avg_10ma;
+            }
+
         }
 
         if (pgpe_pstate_is_wof_enabled())

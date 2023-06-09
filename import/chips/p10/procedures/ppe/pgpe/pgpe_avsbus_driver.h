@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -65,7 +65,7 @@ enum AVSBUS_SLAVE_ACK_MASK
     AVS_ACK_MFG2                        = 0x01000000
 };
 
-enum AVSBUS_READ_STATUS_MASK
+enum AVSBUS_STATUS_MASK
 {
     AVS_STAT_VDONE                      = 0x8000,
     AVS_STAT_OCW                        = 0x4000,
@@ -73,7 +73,6 @@ enum AVSBUS_READ_STATUS_MASK
     AVS_STAT_OTW                        = 0x1000,
     AVS_STAT_OPW                        = 0x0800
 };
-
 
 enum AVSBUS_DRIVER_RETURN_CODES
 {
@@ -83,7 +82,8 @@ enum AVSBUS_DRIVER_RETURN_CODES
     AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL   = 3,
     AVS_RC_NO_ACTION                    = 4,
     AVS_RC_VDONE_TIMEOUT                = 5,
-    AVS_RC_VDONE_ASSERTED               = 6
+    AVS_RC_VDONE_ASSERTED               = 6,
+    AVS_RC_STAT_ALERT_ASSERTED          = 7
 };
 
 typedef struct avs_profile
@@ -95,15 +95,16 @@ typedef struct avs_profile
     uint32_t avg_time;
 } avs_profile_t;
 
+#define IDD_MIN_CAPTURE_SIZE 16
 typedef struct pgpe_avsbus
 {
     uint32_t voltage_zero_cnt;
     uint32_t current_zero_cnt;
 
-    uint16_t idd_current_thrshd;
-    uint16_t ics_current_thrshd;
+    uint16_t idd_current_thrshd_10ma;
+    uint16_t idd_current_rollover_10ma;
     uint16_t occ_cyc_time_ps;
-    uint16_t pad1;
+    uint16_t idd_max_current_10ma;
 
     uint32_t timebase_tick_ns;
     uint16_t start_dly_ns[2];           // 0: VDD; 1: VCS
@@ -125,9 +126,32 @@ typedef struct pgpe_avsbus
 
     uint16_t delta_tb[2];
     uint16_t to_dly_mult;
-    uint16_t pad2;
 
     avs_profile_t voltage_write[2];
+
+    uint32_t total_current_read_cnt;
+    uint32_t total_current_read_alert_cnt;
+    uint32_t idd_current_zero_cnt;
+    uint32_t ocw_mode;
+    uint32_t ocw_cnt;;
+    uint32_t ocw_rollover_cnt;
+    uint32_t ocw_rollover_low_current_cnt;
+    uint16_t ocw_correction_threshold_10ma;
+    uint16_t idd_max_vrm_design_current_10ma;
+    uint16_t idd_min_current_raw_10ma;
+    uint16_t idd_min_current_adj_10ma;
+    uint16_t idd_min_not_ocw_below_correction_10ma;
+    uint16_t idd_min_threshold_10ma;
+    uint16_t idd_read_ocw_exit_below_10ma;
+    uint16_t wof_table_header_boost_current_10ma;
+    uint16_t saddleback_rollerover_enabled;
+    uint16_t idd_min_current_adj_cnt;
+    uint16_t idd_min_current_raw_cnt;
+    uint16_t idd_min_values_adj_10ma[IDD_MIN_CAPTURE_SIZE];
+    uint16_t idd_min_values_raw_10ma[IDD_MIN_CAPTURE_SIZE];
+    uint16_t idd_prev_10ma;
+    uint16_t version;
+    uint16_t min_current_enable;
 } pgpe_avsbus_t;
 
 
@@ -141,7 +165,9 @@ void* pgpe_avsbus_data_addr();
 void pgpe_avsbus_init_bus(uint32_t bus_num);
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv,  int32_t delta_volt_mv,
                                uint32_t rail);
-void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_volt);
+void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* cmd_data);
 void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_current, uint32_t current_scale_idx);
+void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status);
+void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask, uint32_t* ret_status);
 
 #endif

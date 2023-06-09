@@ -1228,8 +1228,10 @@ uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     uint32_t idd_ac_10ma = pgpe_pstate_intp_idd_ac_from_ps(ps, vpd_pt_set);
     uint32_t idd_dc_10ma = pgpe_pstate_intp_idd_dc_from_ps(ps, vpd_pt_set);
 
+    G_pgpe_pstate.idd = idd_ac_10ma + idd_dc_10ma;
+
     //compute load line drop
-    uint32_t vdd_uplift_mv = ((((idd_ac_10ma + idd_dc_10ma) * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
+    uint32_t vdd_uplift_mv = (((G_pgpe_pstate.idd * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
                                pgpe_gppb_get_vdd_sysparm_distloss())) / 100
                               + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
@@ -1246,7 +1248,9 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
     uint32_t ics_ac = pgpe_pstate_intp_ics_ac_from_ps(ps, vpd_pt_set);
     uint32_t ics_dc = pgpe_pstate_intp_ics_dc_from_ps(ps, vpd_pt_set);
 
-    uint32_t vcs_uplift = ((((ics_ac + ics_dc) * vratio_vcs) *  (pgpe_gppb_get_vcs_sysparm_loadline() +
+    G_pgpe_pstate.ics = ics_ac + ics_dc;
+
+    uint32_t vcs_uplift = ((G_pgpe_pstate.ics * (pgpe_gppb_get_vcs_sysparm_loadline() +
                             pgpe_gppb_get_vcs_sysparm_distloss())) / 100
                            + pgpe_gppb_get_vcs_sysparm_distoffset()) / 1000;
 

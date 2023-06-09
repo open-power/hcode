@@ -24,12 +24,14 @@
 /* IBM_PROLOG_END_TAG                                                     */
 
 #include "pgpe.h"
+#include "pgpe_header.h"
 #include "pgpe_avsbus_driver.h"
 #include "pgpe_gppb.h"
 #include "p10_oci_proc.H"
 #include "p10_scom_perv_a.H"
 #include "pgpe_error.h"
 #include "pgpe_gppb.h"
+#include "pgpe_pstate.h"
 
 typedef union
 {
@@ -41,17 +43,12 @@ typedef union
     } words;
 } tod_t;
 
-//Local Functions
-// uint32_t pgpe_avsbus_calc_crc(uint32_t data);
-// uint32_t pgpe_avsbus_poll_trans_done(uint32_t bus_num);
-// uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num);
-// uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data, uint32_t bus_num, uint32_t rail_num);
-// uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint32_t bus_num, uint32_t rail_num);
 
 static uint32_t AVS_CONTROL_RETRIES = 500;
 static uint32_t AVS_RESYNC_RETRIES = 1;
 
 pgpe_avsbus_t G_pgpe_avsbus __attribute__((section (".data_structs")));
+extern pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
 
 inline uint32_t round_dec(uint32_t value)
 {
@@ -243,13 +240,12 @@ uint32_t pgpe_avsbus_drive_idle_frame(uint32_t bus_num)
 // Function which writes to OCB registers to initiate a AVS write transaction
 //#################################################################################################
 uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data,  int32_t delta_volt_mv, uint32_t bus_num,
-                                 uint32_t rail_num)
+                                 uint32_t rail_num, uint32_t* slave_ack)
 {
     uint8_t  rc = 0, retry_cnt = 0, done = 0, retry_cnt_avsbus_not_in_ctrl = 0;
 
-
     uint32_t cmd_frame = 0;
-    uint32_t slave_ack  = 0;
+//    uint32_t slave_ack  = 0;
 
     uint32_t rail_select =  rail_num;
     uint32_t start_code  = 1;
@@ -280,7 +276,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data,  int
 
         // Wait on o2s_ongoing = 0
         rc = pgpe_avsbus_poll_trans_done(bus_num);
-        slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A | bus_mask);
+        *slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A | bus_mask);
 
         if (!rc)
         {
@@ -288,11 +284,13 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data,  int
         }
         else
         {
+            PK_TRACE_DBG("AVS: Drive_W slave ack = 0x%08x", *slave_ack);
+
             //Non-zero SlaveAck
-            if(slave_ack & AVS_ACK_PREFIX)
+            if(*slave_ack & AVS_ACK_PREFIX)
             {
                 //If AVSBUS Control taken away then retry multiple times
-                if (!(slave_ack & AVS_ACK_BUS_CONTROL))
+                if (!(*slave_ack & AVS_ACK_BUS_CONTROL))
                 {
                     if (retry_cnt_avsbus_not_in_ctrl < AVS_CONTROL_RETRIES)
                     {
@@ -309,9 +307,9 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data,  int
                 }
                 else if (retry_cnt > AVS_RESYNC_RETRIES)
                 {
-                    PK_TRACE_INF("AVS: Drive_W Error Slave Ack, O2SRD0A=0x%04x", slave_ack);
+                    PK_TRACE_INF("AVS: Drive_W Error Slave Ack, O2SRD0A=0x%04x", *slave_ack);
 
-                    if(slave_ack & 0x40000000)
+                    if(*slave_ack & 0x40000000)
                     {
                         rc = AVS_RC_NO_ACTION;
                     }
@@ -350,7 +348,7 @@ uint32_t pgpe_avsbus_drive_write(uint32_t cmd_data_type, uint32_t cmd_data,  int
 //#################################################################################################
 uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint32_t bus_num, uint32_t rail_num)
 {
-    uint8_t  rc = 0, retry_cnt = 0, done = 0 , retry_cnt_avsbus_not_in_ctrl = 0 ;
+    uint32_t rc = 0, retry_cnt = 0, done = 0 , retry_cnt_avsbus_not_in_ctrl = 0 ;
     uint32_t cmd_frame = 0;
     uint32_t slave_ack = 0;
 
@@ -394,7 +392,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
         {
             // Read returned voltage value from Read frame
             slave_ack = in32(TP_TPCHIP_OCC_OCI_OCB_O2SRD0A  | bus_mask);
-
+            PK_TRACE_DBG("AVS: Drive_R Slave Ack Frame = 0x%08x", slave_ack);
             //                  bits
             // Slave Ack Frame: 0:1 Slave Ack encode (with 0b00 being a "good" value)
             //                  2   Reserved
@@ -407,7 +405,6 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
             //Non-zero SlaveAck
             if(slave_ack & AVS_ACK_PREFIX)
             {
-
                 //If AVSBUS Control taken away then retry multiple times
                 if (!(slave_ack & AVS_ACK_BUS_CONTROL))
                 {
@@ -444,7 +441,7 @@ uint32_t pgpe_avsbus_drive_read(uint32_t cmd_data_type, uint32_t* cmd_data, uint
             }
             else
             {
-                *cmd_data = (slave_ack >> 8) & 0x0000FFFF;
+                *cmd_data = slave_ack;
                 done = 1;
             }
         }
@@ -459,29 +456,79 @@ void* pgpe_avsbus_data_addr()
     return &G_pgpe_avsbus;
 }
 
+
+const uint32_t OCW_ROLLOVER_VALUE_10ma          = 32767;  // 327.67A in 10ma form
+const uint32_t OCW_THRESHOLD_10ma               = 32600;
+const uint32_t MAX_VRM_CURRENT_10ma             = 42000;
+const uint32_t MIN_REAL_CURRENT_10ma            =  2000;  // 20A
+const uint32_t MIN_CAPTURE_TRIGGER_CURRENT_10ma = 30000;
+
 void pgpe_avsbus_init()
 {
     PK_TRACE_INF("AVS: Init");
     PK_TRACE_INF("AVS: VDDBUS=%u,VDNBUS=%u,VCSBUS=%u", pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                  pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(), pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
 
+
+    /*
+        MAX VRM Current                     42000
+        ^
+        |    Corrected region
+        v
+        Rollover value                      32767
+        ^
+        |    OCW fire value                 32600
+        |
+        |    Don't correct in this region
+        |    if OCW, reset OCW
+        v
+        MAX VRM Current - OCW rollover       9233  (42000 - 32767)
+        ^
+        |    always correct these values
+        v
+        0
+    */
+
+    G_pgpe_avsbus.version = 0x8002;
+
     G_pgpe_avsbus.to_dly_mult = 10;  // Timeout multiplier
 
     G_pgpe_avsbus.voltage_zero_cnt = 0;
     G_pgpe_avsbus.current_zero_cnt = 0;
-    G_pgpe_avsbus.idd_current_thrshd = 0;
-    G_pgpe_avsbus.ics_current_thrshd = 0;
-    G_pgpe_avsbus.occ_cyc_time_ps = 0;
-    G_pgpe_avsbus.timebase_tick_ns = 0;
+    G_pgpe_avsbus.saddleback_rollerover_enabled = 0;
+    G_pgpe_avsbus.idd_current_thrshd_10ma = OCW_THRESHOLD_10ma;
+    G_pgpe_avsbus.idd_current_rollover_10ma = OCW_ROLLOVER_VALUE_10ma;
+    G_pgpe_avsbus.idd_max_vrm_design_current_10ma = MAX_VRM_CURRENT_10ma;
+    G_pgpe_avsbus.idd_max_current_10ma = 0;
+    G_pgpe_avsbus.idd_min_current_raw_10ma = 0xFFFF;
+    G_pgpe_avsbus.idd_min_current_adj_10ma = 0xFFFF;
+    G_pgpe_avsbus.idd_min_threshold_10ma = MIN_REAL_CURRENT_10ma;
+    G_pgpe_avsbus.idd_min_not_ocw_below_correction_10ma = 0xFFFF;
+    G_pgpe_avsbus.idd_read_ocw_exit_below_10ma = 0;
+    G_pgpe_avsbus.ocw_correction_threshold_10ma = MAX_VRM_CURRENT_10ma - OCW_ROLLOVER_VALUE_10ma;
+    G_pgpe_avsbus.ocw_mode = 0;
+    G_pgpe_avsbus.ocw_cnt = 0;
+    G_pgpe_avsbus.ocw_rollover_cnt = 0;
+    G_pgpe_avsbus.ocw_rollover_low_current_cnt = 0;
+    G_pgpe_avsbus.total_current_read_cnt = 0;
+    G_pgpe_avsbus.total_current_read_alert_cnt = 0;
+    G_pgpe_avsbus.idd_min_current_adj_cnt = 0;
+    G_pgpe_avsbus.min_current_enable = 0;
+
+    uint32_t i;
+
+    for (i = 0; i < IDD_MIN_CAPTURE_SIZE; ++i)
+    {
+        G_pgpe_avsbus.idd_min_values_raw_10ma[i] = 0xFFFF;
+        G_pgpe_avsbus.idd_min_values_adj_10ma[i] = 0xFFFF;
+    }
 
     //Initialize PGPE cycle time to a picosecond value (for integer representation)
     // 1/600MHz = 0.001667 => 1e7/600 = 16666 (1666.6ps)
     // Round:  16666 + 5 => 16671 / 10 = 1667ps
-
     if (pgpe_gppb_get_occ_complex_frequency_mhz())
     {
         G_pgpe_avsbus.occ_cyc_time_ps = round_dec(1000000 / (pgpe_gppb_get_occ_complex_frequency_mhz()));
-
         G_pgpe_avsbus.timebase_tick_ns = round_dec(2 * 10 * 1000 / pgpe_gppb_get_occ_complex_frequency_mhz());
     }
 
@@ -536,10 +583,22 @@ void pgpe_avsbus_init()
         pgpe_error_state_loop();
     }
 
-    PK_TRACE_INF("AVS: VDD TB tick time (incr, decr)         = %u %u tb ticks",
+    PK_TRACE_INF("AVS: VDD TB tick time (incr, decr)        = %u %u tb ticks",
                  G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD], G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VDD]);
-    PK_TRACE_INF("AVS: VCS TB tick time (incr, decr)         = %u %u tb ticks",
+    PK_TRACE_INF("AVS: VCS TB tick time (incr, decr)        = %u %u tb ticks",
                  G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS], G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS]);
+
+    WofTablesHeader_t* G_wof_table_address = (WofTablesHeader_t*)pgpe_header_get(g_pgpe_wofTableAddress);
+    G_pgpe_avsbus.wof_table_header_boost_current_10ma = G_wof_table_address->boost_current_a * 100;  // 0.01A = 10mA
+    PK_TRACE_INF("AVS: WOF Table Boost Current (10mA)       = %u 0x%X",
+                 G_pgpe_avsbus.wof_table_header_boost_current_10ma, G_pgpe_avsbus.wof_table_header_boost_current_10ma);
+
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SADDLEBACK_ROLLOVER_ENABLE))
+    {
+        G_pgpe_avsbus.saddleback_rollerover_enabled = 1;
+    }
+
+    PK_TRACE_INF("AVS: Saddleback Rollover Enabled          = %u", G_pgpe_avsbus.saddleback_rollerover_enabled );
 }
 
 
@@ -597,62 +656,6 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
     }
 }
 
-// Note: this is called by routine already in protected context
-uint32_t pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status)
-{
-    uint32_t rc = AVS_RC_SUCCESS;
-
-    if (bus_num != 0xFF)
-    {
-        rc = pgpe_avsbus_drive_read(AVS_CMD_STATUS_RW, ret_status, bus_num, rail_num);
-
-        switch (rc)
-        {
-            case AVS_RC_SUCCESS:
-                PK_TRACE_DBG("AVS: Stat_R, Success!");
-                break;
-
-            case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
-                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
-                pgpe_error_state_loop();
-                break;
-
-            case AVS_RC_NO_ACTION:
-                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
-                pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
-                pgpe_error_state_loop();
-                break;
-
-            case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS: Stat_R, Resync Error");
-                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR);
-                pgpe_error_state_loop();
-                break;
-
-            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
-                PK_TRACE_ERR("AVS: Stat_R, Not in PGPE Control");
-                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL);
-                pgpe_error_state_loop();
-                break;
-
-            default:
-                PK_TRACE_ERR("AVS: Stat_R, Unknown Error");
-                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR);
-                pgpe_error_state_loop();
-                break;
-        }
-    }
-    else
-    {
-        PK_TRACE_ERR("AVS: Stat_R, bus_num=%u not available", bus_num);
-        *ret_status = 0;
-        rc = 0xFF;
-    }
-
-    return rc;
-}
-
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv,  int32_t delta_volt_mv,
                                uint32_t rail)
 {
@@ -662,6 +665,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
     uint32_t write_start_tb = 0;
     uint32_t vdone_end_tb = 0;
     uint32_t vdone_timeout_delta_tb = 0;
+    uint32_t ret_status;
 
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
@@ -692,7 +696,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         // Drive write transaction with a target voltage on a particular rail and wait on o2s_ongoing=0
         write_start_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
 
-        rc = pgpe_avsbus_drive_write(AVS_CMD_VOLTAGE_RW, volt_mv, delta_volt_mv, bus_num, rail_num);
+        rc = pgpe_avsbus_drive_write(AVS_CMD_VOLTAGE_RW, volt_mv, delta_volt_mv, bus_num, rail_num, &ret_status);
 
         switch (rc)
         {
@@ -734,45 +738,36 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         // Poll for Vdone with timeout
         do
         {
-            uint32_t ret_status;
+            pgpe_avsbus_status_read( bus_num, rail_num, &ret_status);
 
-            rc = pgpe_avsbus_status_read( bus_num, rail_num, &ret_status);
+            // Check for Vdone being set to indicate the transition has completed
+            //
+            // <VDone> - A single bit flag that will be 0b while the rail
+            // is off or powering up, it will change to 1b as soon as the
+            // voltage has reached the set operating point, and will
+            // again transition to 0b when a new target is committed.
+            vdone_end_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
+            vdone_timeout_delta_tb = delta_tb(write_start_tb, vdone_end_tb);
 
-            if ( rc )
+            if ( ret_status & AVS_STAT_VDONE )
             {
-                done = 1;  // due to error
+                probe0_deassert();
+                pgpe_avs_profile(&G_pgpe_avsbus.voltage_write[rail], time);
+                done = 1;
             }
             else
             {
-                // Check for Vdone being set to indicate the transition has completed
-                //
-                // <VDone> - A single bit flag that will be 0b while the rail
-                // is off or powering up, it will change to 1b as soon as the
-                // voltage has reached the set operating point, and will
-                // again transition to 0b when a new target is committed.
-                vdone_end_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
-                vdone_timeout_delta_tb = delta_tb(write_start_tb, vdone_end_tb);
-
-                if ( ret_status & AVS_STAT_VDONE )
+                if ( vdone_timeout_delta_tb > G_pgpe_avsbus.delta_tb[rail] )
                 {
-                    probe0_deassert();
-                    pgpe_avs_profile(&G_pgpe_avsbus.voltage_write[rail], time);
-                    done = 1;
+                    PK_TRACE_INF("AVS: Volt_W Timeout:  retries %d", vdone_retry_cnt);
+                    PK_TRACE_INF("AVS: Volt_W Timeout:  actual %d threshold %d", vdone_timeout_delta_tb, G_pgpe_avsbus.delta_tb[rail]);
+                    rc = AVS_RC_VDONE_TIMEOUT;
+                    pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT);
+                    pgpe_error_state_loop();
                 }
                 else
                 {
-                    if ( vdone_timeout_delta_tb > G_pgpe_avsbus.delta_tb[rail] )
-                    {
-                        PK_TRACE_INF("AVS: Volt_W Timeout:  retries %d", vdone_retry_cnt);
-                        PK_TRACE_INF("AVS: Volt_W Timeout:  actual %d threshold %d", vdone_timeout_delta_tb, G_pgpe_avsbus.delta_tb[rail]);
-                        rc = AVS_RC_VDONE_TIMEOUT;
-                        pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_VDONE_TIMEOUT);
-                        pgpe_error_state_loop();
-                    }
-                    else
-                    {
-                        vdone_retry_cnt++;
-                    }
+                    vdone_retry_cnt++;
                 }
             }
         }
@@ -791,10 +786,14 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
     uint32_t rc = 0;
+    uint32_t cmd_data = 0;
 
     if (bus_num != 0xFF)
     {
-        rc = pgpe_avsbus_drive_read(AVS_CMD_VOLTAGE_RW, ret_volt, bus_num, rail_num);
+        rc = pgpe_avsbus_drive_read(AVS_CMD_VOLTAGE_RW, &cmd_data, bus_num, rail_num);
+
+        *ret_volt = (cmd_data >> 8) & 0x0000FFFF;
+        PK_TRACE_INF("AVS: Volt_R, ret_volt %u rc = %u", *ret_volt, rc);
 
         switch (rc)
         {
@@ -835,7 +834,7 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Volt_R, Unknown Error");
+                PK_TRACE_ERR("AVS: Volt_R, Unknown Error rc = %u", rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;
@@ -853,14 +852,21 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
 void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_current, uint32_t current_scale_idx)
 {
+
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
 
     uint32_t rc = 0;
+    uint32_t cmd_data = 0;
+    uint32_t avs_status = 0;
 
     if (bus_num != 0xFF)
     {
-        rc = pgpe_avsbus_drive_read(AVS_CMD_CURRENT_READ, ret_current, bus_num, rail_num);
+
+        rc = pgpe_avsbus_drive_read(AVS_CMD_CURRENT_READ, &cmd_data, bus_num, rail_num);
+
+        *ret_current = (cmd_data >> 8) & 0x0000FFFF;
+        PK_TRACE_DBG("AVS: Curr_R, raw ret_current %u rc = %u", *ret_current, rc);
 
         switch (rc)
         {
@@ -869,7 +875,150 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
                 if(*ret_current)
                 {
+                    if ((current_scale_idx == CURRENT_SCALE_IDX_VDD) && (*ret_current < G_pgpe_avsbus.idd_min_current_raw_10ma))
+                    {
+                        G_pgpe_avsbus.idd_min_current_raw_10ma = (uint16_t) * ret_current;
+
+                        if (G_pgpe_avsbus.idd_min_current_raw_cnt < IDD_MIN_CAPTURE_SIZE)
+                        {
+                            G_pgpe_avsbus.idd_min_values_raw_10ma[G_pgpe_avsbus.idd_min_current_raw_cnt] = (uint16_t) * ret_current;
+                        }
+
+                        G_pgpe_avsbus.idd_min_current_raw_cnt++;
+
+                        if (G_pgpe_avsbus.idd_min_current_raw_cnt == IDD_MIN_CAPTURE_SIZE)
+                        {
+                            G_pgpe_avsbus.idd_min_current_raw_cnt = 0;
+                        }
+                    }
+
                     *ret_current = *ret_current * pgpe_gppb_get_current_scale_factor(current_scale_idx);
+                    PK_TRACE_DBG("AVS: Curr_R, scaled current %u scale %u", *ret_current,
+                                 pgpe_gppb_get_current_scale_factor(current_scale_idx));
+                }
+                else
+                {
+                    G_pgpe_avsbus.current_zero_cnt++;
+                }
+
+                G_pgpe_avsbus.total_current_read_cnt++;
+
+                if (cmd_data & (uint32_t)AVS_ACK_STAT_ALERT)
+                {
+                    G_pgpe_avsbus.total_current_read_alert_cnt++;
+
+                    pgpe_avsbus_status_read(bus_num, rail_num, &avs_status);
+
+                    PK_TRACE_DBG("AVS: Curr_R, Status Alert; status read: 0x%04X current %u ocw_mode %u ",
+                                 avs_status, *ret_current, G_pgpe_avsbus.ocw_mode);
+
+                    if ( avs_status & (uint32_t)AVS_STAT_OCW )
+                    {
+                        // Set the OCW tracking state
+                        G_pgpe_avsbus.ocw_mode = 1;
+
+                        G_pgpe_avsbus.ocw_cnt++;
+
+                        // Clear the OCW bit to arm the VRM to notify upon the next upward OCW crossing
+                        uint32_t status_clear_status = 0;
+                        pgpe_avsbus_status_write(bus_num, rail_num, (uint32_t)(AVS_STAT_VDONE | AVS_STAT_OCW), &status_clear_status);
+                        PK_TRACE_INF("AVS: Curr_R, Entering OCW mode. Clear VDone and OCW bus %u rail %u status 0x%08X", bus_num, rail_num,
+                                     status_clear_status );
+                    }
+                }
+
+                if ((G_pgpe_avsbus.saddleback_rollerover_enabled) && (current_scale_idx == CURRENT_SCALE_IDX_VDD))
+                {
+                    // In OCW mode, correct currents up to VRM Max -rollover (eg correction threshold)
+                    bool b_current_below_correction = (*ret_current <= (uint32_t)G_pgpe_avsbus.ocw_correction_threshold_10ma) ? true :
+                                                      false;
+
+                    if (b_current_below_correction)
+                    {
+                        if (G_pgpe_avsbus.ocw_mode)
+                        {
+                            uint32_t l_rollover_filter_10ma;
+                            uint32_t l_corrected_10ma;
+
+                            // The filter is 150% of the TDP current from VPD
+                            l_rollover_filter_10ma = G_pgpe_pstate.idd;  // G_pgpe_pstate.idd is in 10ma units
+                            l_rollover_filter_10ma +=  (l_rollover_filter_10ma >> 1);
+
+                            l_corrected_10ma = *ret_current;
+                            l_corrected_10ma += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
+
+                            if (l_corrected_10ma < l_rollover_filter_10ma)
+                            {
+                                *ret_current = l_corrected_10ma;
+                                G_pgpe_avsbus.ocw_rollover_cnt++;
+                                PK_TRACE_DBG("AVS: Curr_R, OCW; corrected current: %u threshold %u status 0x%04X",
+                                             *ret_current, (uint32_t)G_pgpe_avsbus.idd_current_thrshd_10ma, avs_status);
+                            }
+                        }
+                        else  // Not OCW mode
+                        {
+                            if (*ret_current < (uint32_t)G_pgpe_avsbus.idd_min_not_ocw_below_correction_10ma)
+                            {
+                                G_pgpe_avsbus.idd_min_not_ocw_below_correction_10ma = (uint16_t) * ret_current;
+                            }
+
+                            // Unrealizable currents that get through the mode transition
+                            if (*ret_current <= (uint32_t)G_pgpe_avsbus.idd_min_threshold_10ma)
+                            {
+                                *ret_current += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
+                                G_pgpe_avsbus.ocw_rollover_low_current_cnt++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (G_pgpe_avsbus.ocw_mode)
+                        {
+                            G_pgpe_avsbus.idd_read_ocw_exit_below_10ma = *ret_current;
+                        }
+
+                        PK_TRACE_INF("AVS: Curr_R, Exiting OCW mode. Current %u", *ret_current);
+                        G_pgpe_avsbus.ocw_mode = 0;
+                    }
+                }
+
+                if (current_scale_idx == CURRENT_SCALE_IDX_VDD)
+                {
+                    if (*ret_current > (uint32_t)G_pgpe_avsbus.idd_max_current_10ma)
+                    {
+                        G_pgpe_avsbus.idd_max_current_10ma = (uint16_t) * ret_current;
+
+                        if (*ret_current >= MIN_CAPTURE_TRIGGER_CURRENT_10ma)
+                        {
+                            G_pgpe_avsbus.min_current_enable = 1;
+                        }
+                    }
+
+                    if (*ret_current && (*ret_current < G_pgpe_avsbus.idd_min_current_adj_10ma) && G_pgpe_avsbus.min_current_enable)
+                    {
+                        G_pgpe_avsbus.idd_min_current_adj_10ma = (uint16_t) * ret_current;
+
+                        if (G_pgpe_avsbus.idd_min_current_adj_cnt < IDD_MIN_CAPTURE_SIZE)
+                        {
+                            G_pgpe_avsbus.idd_min_values_adj_10ma[G_pgpe_avsbus.idd_min_current_adj_cnt] = (uint16_t) * ret_current;
+                        }
+
+                        G_pgpe_avsbus.idd_min_current_adj_cnt++;
+
+                        if (G_pgpe_avsbus.idd_min_current_adj_cnt == IDD_MIN_CAPTURE_SIZE)
+                        {
+                            G_pgpe_avsbus.idd_min_current_adj_cnt = 0;
+                        }
+                    }
+
+                    if (*ret_current == 0)
+                    {
+                        // Use the last non-zero reading for any zero values
+                        *ret_current = G_pgpe_avsbus.idd_prev_10ma;
+                        G_pgpe_avsbus.idd_current_zero_cnt++;
+                    }
+
+                    G_pgpe_avsbus.idd_prev_10ma = (uint16_t) * ret_current;
                 }
 
                 break;
@@ -893,7 +1042,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Curr_R, Unknown Error");
+                PK_TRACE_ERR("AVS: Curr_R, Unknown Error rc = %u", rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;
@@ -908,4 +1057,117 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
 
     pk_critical_section_exit(&ctx);
+}
+
+void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask, uint32_t* ret_status)
+{
+    PkMachineContext ctx;
+    pk_critical_section_enter(&ctx);
+    uint32_t rc = 0;
+
+    if (bus_num != 0xFF)
+    {
+        rc = pgpe_avsbus_drive_write(AVS_CMD_STATUS_RW, clear_mask, 0, bus_num, rail_num, ret_status);
+
+        switch (rc)
+        {
+            case AVS_RC_SUCCESS:
+                PK_TRACE_DBG("AVS: Stat_W, Success!");
+                break;
+
+            case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS: Stat_W, OnGoing Flag Timeout");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_NO_ACTION:
+                PK_TRACE_ERR("AVS: Stat_W, OnGoing Flag Timeout");
+                pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_RESYNC_ERROR:
+                PK_TRACE_ERR("AVS: Stat_W, Resync Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_RESYNC_ERROR);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
+                PK_TRACE_ERR("AVS: Stat_W, Not in PGPE Control");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_NOT_IN_PGPE_CONTROL);
+                pgpe_error_state_loop();
+                break;
+
+            default:
+                PK_TRACE_ERR("AVS: Stat_W, Unknown Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_UNKNOWN_ERROR);
+                pgpe_error_state_loop();
+                break;
+        }
+    }
+    else
+    {
+        PK_TRACE_ERR("AVS: Stat_W, bus_num=%u not available", bus_num);
+    }
+
+    pk_critical_section_exit(&ctx);
+
+}
+
+// Note: this is called by routine already in protected context
+void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status)
+{
+    uint32_t rc = 0;
+    uint32_t cmd_data = 0;
+
+    if (bus_num != 0xFF)
+    {
+        rc = pgpe_avsbus_drive_read(AVS_CMD_STATUS_RW, &cmd_data, bus_num, rail_num);
+
+        *ret_status = (cmd_data >> 8) & 0x0000FFFF;
+        PK_TRACE_DBG("AVS: Stat_R, ret_status 0x%08X rc = %u", *ret_status, rc);
+
+        switch (rc)
+        {
+            case AVS_RC_SUCCESS:
+                PK_TRACE_DBG("AVS: Stat_R, Success!");
+                break;
+
+            case AVS_RC_ONGOING_TIMEOUT:
+                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_ONGOING_TIMEOUT);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_NO_ACTION:
+                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
+                pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_STATUS_READ_GOOD_CRC_NO_ACTION);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_RESYNC_ERROR:
+                PK_TRACE_ERR("AVS: Stat_R, Resync Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_RESYNC_ERROR);
+                pgpe_error_state_loop();
+                break;
+
+            case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
+                PK_TRACE_ERR("AVS: Stat_R, Not in PGPE Control");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_NOT_IN_PGPE_CONTROL);
+                pgpe_error_state_loop();
+                break;
+
+            default:
+                PK_TRACE_ERR("AVS: Stat_R, Unknown Error");
+                pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_UNKNOWN_ERROR);
+                pgpe_error_state_loop();
+                break;
+        }
+    }
+    else
+    {
+        PK_TRACE_ERR("AVS: Stat_R, bus_num=%u not available", bus_num);
+        *ret_status = 0;
+    }
 }
