@@ -76,7 +76,14 @@ uint32_t delta_tb(uint32_t start_time, uint32_t end_time)
 uint32_t us_to_tb(uint32_t us)
 {
     // ns/(ns/tb) = tb
-    return round_dec(us * 1000 / G_pgpe_avsbus.timebase_tick_ns);
+    uint32_t usec = 0;
+
+    if (G_pgpe_avsbus.timebase_tick_ns)
+    {
+        usec = round_dec(us * 1000 / G_pgpe_avsbus.timebase_tick_ns);
+    }
+
+    return usec;
 }
 
 static inline void probe0_assert()
@@ -464,13 +471,19 @@ void pgpe_avsbus_init()
     G_pgpe_avsbus.current_zero_cnt = 0;
     G_pgpe_avsbus.idd_current_thrshd = 0;
     G_pgpe_avsbus.ics_current_thrshd = 0;
+    G_pgpe_avsbus.occ_cyc_time_ps = 0;
+    G_pgpe_avsbus.timebase_tick_ns = 0;
 
     //Initialize PGPE cycle time to a picosecond value (for integer representation)
     // 1/600MHz = 0.001667 => 1e7/600 = 16666 (1666.6ps)
     // Round:  16666 + 5 => 16671 / 10 = 1667ps
-    G_pgpe_avsbus.occ_cyc_time_ps = round_dec(1000000 / (pgpe_gppb_get_occ_complex_frequency_mhz()));
 
-    G_pgpe_avsbus.timebase_tick_ns = round_dec(2 * 10 * 1000 / pgpe_gppb_get_occ_complex_frequency_mhz());
+    if (pgpe_gppb_get_occ_complex_frequency_mhz())
+    {
+        G_pgpe_avsbus.occ_cyc_time_ps = round_dec(1000000 / (pgpe_gppb_get_occ_complex_frequency_mhz()));
+
+        G_pgpe_avsbus.timebase_tick_ns = round_dec(2 * 10 * 1000 / pgpe_gppb_get_occ_complex_frequency_mhz());
+    }
 
     PK_TRACE_INF("AVS: occ_freq Mhz                         = %u",    pgpe_gppb_get_occ_complex_frequency_mhz());
     PK_TRACE_INF("AVS: occ_cyc_time_ps                      = %u",    G_pgpe_avsbus.occ_cyc_time_ps);
