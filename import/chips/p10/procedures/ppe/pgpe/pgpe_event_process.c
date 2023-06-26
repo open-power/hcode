@@ -100,6 +100,7 @@ void pgpe_process_pstate_start_stop(void* eargs)
             {
                 PK_TRACE_ERR("PEP: Invalid PMCR Owner");
                 args->msg_cb.rc = PGPE_RC_INVALID_PMCR_OWNER;
+                pgpe_error_info_log(PGPE_ERR_CODE_PGPE_INVALID_PMCR_OWNER);
                 pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_INVALID_PMCR_OWNER);
             }
         }
@@ -130,6 +131,8 @@ void pgpe_process_pstate_start_stop(void* eargs)
             else
             {
                 //The operation is effectively a nop, so we return a good RC to OCC.
+                //we create an info log
+                pgpe_error_info_log(PGPE_ERR_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED);
                 pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_PSTATE_STOP_IN_PSTATE_STOPPED);
             }
         }
@@ -741,11 +744,13 @@ uint32_t pgpe_process_wof_enable(ipcmsg_wof_control_t* args)
 
     if(!pgpe_pstate_is_pstate_enabled())
     {
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED);
         pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_VRT_IN_PSTATE_STOPPED);
         rc = PGPE_RC_PSTATES_NOT_STARTED;
     } //if wof already enabled
     else if(pgpe_pstate_is_wof_enabled())
     {
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED);
         pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_ENABLE_WHEN_ENABLED);
         rc = PGPE_RC_SUCCESS;
     }
@@ -785,11 +790,13 @@ uint32_t pgpe_process_wof_disable()
 
     if(!pgpe_pstate_is_wof_enabled())
     {
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED);
         pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_WHEN_WOF_DISABLED);
         rc = PGPE_RC_SUCCESS;
     }
     else if(!pgpe_pstate_is_pstate_enabled())
     {
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED);
         pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOF_CTRL_DISABLE_IN_PSTATE_STOPPED);
         rc = PGPE_RC_PSTATES_NOT_STARTED;
     }
@@ -955,6 +962,7 @@ void pgpe_process_safe_mode(void* args)
     else
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_OR, BIT32(PGPE_SAFE_MODE_ERROR));
+        pgpe_error_info_log(PGPE_ERR_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED);
         pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_SAFE_MODE_IN_PSTATE_STOPPED);
     }
 
@@ -996,6 +1004,9 @@ void pgpe_process_xstop_fault()
 {
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
+
+    //Take out a info log
+    pgpe_error_info_log(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
 
     //Notify error module
     pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_XSTOP_GPE2);
@@ -1040,6 +1051,9 @@ void pgpe_process_pvref_fault()
     //PVREF
     //disable the rVRMs through setting RVCSR[RVID_OVERRIDE]
     PPE_PUTSCOM_MC(CPMS_RVCSR_WO_CLEAR, 0xF, BIT64(CPMS_RVCSR_RVID_OVERRIDE));
+
+    //Take out a log
+    pgpe_error_info_log(PGPE_ERR_CODE_PGPE_PVREF_ERROR);
 
     //Notify error module
     pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_PVREF_ERROR);

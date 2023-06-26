@@ -790,6 +790,8 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
                 if(*ret_volt == 0)
                 {
+                    pgpe_error_info_log_usrdata( PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE, bus_num, rail_num,
+                                                 G_pgpe_avsbus.voltage_zero_cnt);
                     pgpe_error_notify_info(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ZERO_VALUE);
                 }
 
