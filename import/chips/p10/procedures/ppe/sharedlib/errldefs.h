@@ -52,9 +52,10 @@ static const uint32_t ERRL_SLOT_SHIFT = 0x80000000;
 // @note  The algorithm to get an error slot assumes the all errors per GPE
 //        are ordered sequentially without mixing with errors from other GPEs
 // @note  Per current requirement & memory constraints there will only be 1
-//        unrecoverable & 1 informational error log per GPE.
-//        Total memory for error logs = 20*512 = 10kB in OCC SRAM,
-//        of which, 1kB would be copied down from per QME SRAM to OCC SRAM
+//        unrecoverable & 1 informational error log for PGPE and one Unrecoverable
+//        error log for XGPE and QME.
+//        Total memory for error logs = 11 * 2 = 22KB in OCC SRAM,
+//        of which, 16KB would be copied down from per QME SRAM to OCC SRAM
 /* Slot Masks */
 typedef enum
 {
@@ -68,7 +69,8 @@ typedef enum
     ERRL_SLOT_MASK_QME6_UNREC     = 0xFDFFFFFF,
     ERRL_SLOT_MASK_QME7_UNREC     = 0xFEFFFFFF,
     ERRL_SLOT_MASK_PGPE_UNREC     = 0xFF7FFFFF,
-    ERRL_SLOT_MASK_XGPE_UNREC     = 0xFFBFFFFF,
+    ERRL_SLOT_MASK_PGPE_INFO      = 0xFFBFFFFF,
+    ERRL_SLOT_MASK_XGPE_UNREC     = 0xFFDFFFFF,
 } ERRL_SLOT_MASK;
 
 // Index into array of error log entries in hcode_error_table_t
@@ -91,8 +93,9 @@ enum elog_entry_index
     ERRL_SLOT_QMES_MAX      = 0x07,
     ERRL_SLOT_PGPE_BASE     = 0x08,
     ERRL_SLOT_PGPE_UNREC    = 0x08, // 8
-    ERRL_SLOT_XGPE_BASE     = 0x09,
-    ERRL_SLOT_XGPE_UNREC    = 0x09, // 9
+    ERRL_SLOT_PGPE_INF      = 0x09,
+    ERRL_SLOT_XGPE_BASE     = 0x0A,
+    ERRL_SLOT_XGPE_UNREC    = 0x0A, // 10
     ERRL_SLOT_INVALID       = 0xFF, // default invalid
 };
 
