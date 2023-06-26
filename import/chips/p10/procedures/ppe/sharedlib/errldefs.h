@@ -36,7 +36,7 @@ extern "C" {
 // Size of traces to add to ERRL_USR_DTL_TRACE_DATA
 #define ERRL_TRACE_DATA_SZ_PGPE 0x438
 #define ERRL_TRACE_DATA_SZ_XGPE 0x438
-#define ERRL_TRACE_DATA_SZ_QME  0x438
+#define ERRL_TRACE_DATA_SZ_QME  0x238
 
 // Defines used to programmatically arrive at QME instance slot mask
 #define ERRL_SLOT_MASK_QME_UNREC_BASE 0x80000000
