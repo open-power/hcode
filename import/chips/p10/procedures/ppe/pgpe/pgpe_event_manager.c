@@ -489,6 +489,7 @@ void pgpe_event_manager_run_active()
             else if(occFlag & 0x02000000)
             {
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG2_WO_CLEAR, BITS32(PGPE_HCODE_ERROR_INJECT, PGPE_HCODE_ERROR_INJECT_LEN));
+                pgpe_error_info_log(PGPE_ERR_CODE_PGPE_ACTUATE_ERROR_INJECT_INFO);
             }
             else
             {

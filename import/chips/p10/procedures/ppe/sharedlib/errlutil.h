@@ -27,6 +27,25 @@
 
 #include "errl.h"
 
+/// @brief Create and commit an informational error log
+///
+/// @param [in] i_rc [uint8_t] Unique code identifying the reason of this error
+/// @param [in] i_extRc [uint16_t] Extended Reason Code for this error
+/// @param [in] i_modId [uint16_t] Module/function ID where the error log is created
+/// @param [in] i_userData1-3 [uint32_t] User data to add to SRC words of Error Log
+/// @param [in] p_usrDtls [errlDataUsrDtls_t*] Linked list of user detail sections to
+///              be added. NULL if there is none to be added.
+/// @param[out] o_status [uint32_t] See errlStatusCodes
+///
+#define PPE_LOG_ERR_INF(i_rc, i_extRc, i_modId,                   \
+                        i_userData1, i_userData2, i_userData3,    \
+                        p_usrDtls, o_status)                      \
+{                                                                   \
+    errlUDWords_t uDWords = {i_userData1, i_userData2, i_userData3};\
+    o_status = ppeLogError( i_rc, i_extRc, i_modId,       \
+                            ERRL_SEV_INFORMATIONAL,       \
+                            &uDWords, p_usrDtls, NULL );  \
+}
 /// @brief Create and commit an unrecoverable (critical) error log and continue
 ///
 /// @param [in] i_rc [uint8_t] Unique code identifying the reason of this error

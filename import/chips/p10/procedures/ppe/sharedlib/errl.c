@@ -45,9 +45,11 @@
     static uint32_t BCE_TIMEOUT_COUNT = 100000;
 #endif
 
-// Error Log payload for the 2 errors to be committed by local GPE
+// Error Log payload for the 1 errors to be committed by local GPE
 uint8_t G_errLogUnrec[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
-
+#ifdef __PPE_PGPE
+uint8_t G_errLogInfo[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
+#endif
 
 // Order of error logs in this table should match relative order per GPE as per
 // elog_entry_index. This table is set up to point to the error log payloads,
@@ -57,7 +59,7 @@ errlHndl_t  G_gpeErrLogs[MAX_ELOG_ENTRIES] = {0};
 
 hcode_elog_entry_t* G_elogTable = NULL; // Ptr to shared data err idx tbl
 hcodeErrlConfigData_t G_errlConfigData = {0};
-hcodeErrlMetadata_t G_errlMetaData[MAX_ELOG_SLOTS_PER_GPE] = {{0}};
+hcodeErrlMetadata_t G_errlMetaData[MAX_ELOG_SLOTS_PGPE] = {{0}};    //retaining it 2 for each GPE for simplicity
 
 /// Internal Function Prototypes
 uint32_t reportErrorLog ( errlHndl_t* io_err, bool i_report );
@@ -191,6 +193,8 @@ void initErrLogging ( const uint8_t              i_errlSource,
         G_errlConfigData.ppeId = (uint16_t) ( mfspr(SPRN_PIR) &
                                               PIR_PPE_INSTANCE_MASK );
 
+        uint8_t l_maxSlot = MAX_ELOG_SLOTS_PER_GPE;
+
         switch (i_errlSource)
         {
 #ifndef __PPE_QME // save some code space on QME
@@ -200,8 +204,12 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_PGPE;
                 G_errlConfigData.gpeBaseSlot = ERRL_SLOT_PGPE_BASE;
                 G_gpeErrLogs[ERRL_SLOT_PGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
-                break;
 
+#ifdef __PPE_PGPE
+                G_gpeErrLogs[ERRL_SLOT_PGPE_INF]   = (errlHndl_t) &G_errLogInfo;
+                l_maxSlot = MAX_ELOG_SLOTS_PGPE;
+#endif
+                break;
 
             case ERRL_SOURCE_XGPE:
                 // Shares table in OCC SRAM with other GPEs
@@ -209,7 +217,8 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.gpeBaseSlot = ERRL_SLOT_XGPE_BASE;
                 G_gpeErrLogs[ERRL_SLOT_XGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
                 break;
-#endif //  not __PPE_QME
+
+#endif //   __PPE_QME
 
             case ERRL_SOURCE_QME:
                 // Each QME commits error logs to its own table in local QME SRAM
@@ -244,7 +253,7 @@ void initErrLogging ( const uint8_t              i_errlSource,
             {
                 G_errlMetaData[l_slot++].slotMask = ERRL_SLOT_MASK_DEFAULT;
             }
-            while (l_slot < MAX_ELOG_SLOTS_PER_GPE);
+            while (l_slot < l_maxSlot);
         }
         else
         {
@@ -276,6 +285,7 @@ uint8_t getErrSlotNumAndErrId (
     uint8_t  l_slot = ERRL_SLOT_INVALID;
     uint8_t  l_localSlot = ERRL_SLOT_INVALID;
     uint8_t  l_tableSlotIdx = ERRL_SLOT_INVALID;
+    uint8_t  l_maxSlot = MAX_ELOG_SLOTS_PER_GPE;
     uint32_t l_slotmask = ERRL_SLOT_MASK_DEFAULT;
     *o_status = ERRL_STATUS_SUCCESS;
 
@@ -289,6 +299,7 @@ uint8_t getErrSlotNumAndErrId (
 
             case ERRL_SOURCE_PGPE:
                 l_slotmask = ERRL_SLOT_MASK_PGPE_UNREC;
+                l_maxSlot = MAX_ELOG_SLOTS_PGPE;
                 break;
 
             case ERRL_SOURCE_XGPE:
@@ -300,6 +311,16 @@ uint8_t getErrSlotNumAndErrId (
                 l_slotmask = ~(ERRL_SLOT_MASK_QME_UNREC_BASE >>
                                (( G_errlConfigData.ppeId & 0x0f ) << 1)
                               );
+                break;
+        }
+    }
+    else if (ERRL_SEV_INFORMATIONAL == i_severity)
+    {
+        switch(G_errlConfigData.source)
+        {
+            case ERRL_SOURCE_PGPE:
+                l_slotmask = ERRL_SLOT_MASK_PGPE_INFO;
+                l_maxSlot = MAX_ELOG_SLOTS_PGPE;
                 break;
         }
     }
@@ -336,7 +357,7 @@ uint8_t getErrSlotNumAndErrId (
                 l_localSlot = l_slot - G_errlConfigData.gpeBaseSlot;
 
                 // 3. Check that it does not exceed total error slots per GPE
-                if (MAX_ELOG_SLOTS_PER_GPE > l_localSlot)
+                if (l_maxSlot > l_localSlot)
                 {
                     // 4. Get time stamp & save off timestamp
                     *o_timeStamp = pk_timebase_get();
@@ -458,6 +479,12 @@ uint32_t copyTraceBufferPartial ( void* i_pDst,
 uint32_t reportErrorLog (errlHndl_t* io_err, bool i_report)
 {
     uint32_t l_status = ERRL_STATUS_SUCCESS;
+    uint32_t l_maxSlots =  MAX_ELOG_SLOTS_PER_GPE;
+
+    if( ERRL_SOURCE_PGPE == G_errlConfigData.source )
+    {
+        l_maxSlots = MAX_ELOG_SLOTS_PGPE;
+    }
 
     if (NULL != *io_err)
     {
@@ -471,9 +498,9 @@ uint32_t reportErrorLog (errlHndl_t* io_err, bool i_report)
                 break;
             }
         }
-        while (++l_slot < MAX_ELOG_SLOTS_PER_GPE);
+        while (++l_slot < l_maxSlots);
 
-        if (l_slot < MAX_ELOG_SLOTS_PER_GPE)
+        if (l_slot < l_maxSlots)
         {
             // find mapping slot in error table of this engine
             uint8_t l_tblIdx = (l_slot + G_errlConfigData.gpeBaseSlot) -
@@ -542,7 +569,7 @@ errlHndl_t createErrl(
     errlUDWords_t* p_uDWords,
     uint32_t*      o_status )
 {
-    PK_TRACE_INF (">> createErrl: modid 0x%X rc 0x%X extrc 0x%X sev 0x%X",
+    PK_TRACE_INF (">> Patched createErrl: modid 0x%X rc 0x%X extrc 0x%X sev 0x%X",
                   i_modId, i_reasonCode, i_extReasonCode, i_sev);
 
     errlHndl_t  l_rc = NULL;
@@ -625,7 +652,7 @@ errlHndl_t createErrl(
     }
     while (0);
 
-    PK_TRACE_INF ("<< createErrl EID: 0x%08X Status: %d",
+    PK_TRACE_INF ("<< Patched createErrl EID: 0x%08X Status: %d",
                   ((l_rc != NULL) ? (l_rc->iv_entryId) : 0ull),
                   *o_status);
 
