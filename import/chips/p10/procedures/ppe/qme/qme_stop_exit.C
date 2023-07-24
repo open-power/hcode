@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2022                                                    */
+/* COPYRIGHT 2018,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -547,7 +547,12 @@ qme_stop_exit()
             // this establishes the LPAR mode wire to the core(s) and caches(s)
             for( uint32_t core_mask = 8; core_mask; core_mask = core_mask >> 1 )
             {
-                if( core_mask & G_qme_record.c_lpar_mode_enabled & G_qme_record.c_stop11_exit_targets )
+                if( G_qme_record.c_cold_state & core_mask & G_qme_record.c_stop11_exit_targets )
+                {
+                    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
+                    G_qme_record.c_cold_state &= ~core_mask;
+                }
+                else if( core_mask & G_qme_record.c_lpar_mode_enabled & G_qme_record.c_stop11_exit_targets )
                 {
                     out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
 

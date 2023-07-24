@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2022                                                    */
+/* COPYRIGHT 2016,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -100,8 +100,8 @@ qme_init()
     // Now I have check for TOD_SETUPC_OMPLETE to know we are in runtime or not,
     // because the new flag QME_FLAGS_RUNTIME_MODE has a dependency of HB
     // code.Once that code is in ,then we can remove the TOD check.
-    uint32_t ipl_time = ((in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_RUNTIME_MODE)) ||
-                         (in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_TOD_SETUP_COMPLETE))) ? 0x00 : 0x0F;
+    G_qme_record.c_cold_state = ((in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_RUNTIME_MODE)) ||
+                                 (in32( QME_LCL_FLAGS ) & BIT32(QME_FLAGS_TOD_SETUP_COMPLETE))) ? 0x00 : 0x0F;
 
     // use SCDR[12:15] SPECIAL_WKUP_DONE to initialize special wakeup status
     G_qme_record.c_special_wakeup_done = ((in32(QME_LCL_SCDR) & BITS32(12, 4)) >> SHIFT32(15));
@@ -131,7 +131,9 @@ qme_init()
     //master/backing cores are spwu asserted(OTR), so we need to de-assert in istep
     //16 only and in runtime mode will not have the concept of master/backing,
     //so this condition should be skipped.
-    G_qme_record.c_hostboot_cores = G_qme_record.c_special_wakeup_done & G_qme_record.c_configured & ipl_time;
+    G_qme_record.c_hostboot_cores = G_qme_record.c_special_wakeup_done &
+                                    G_qme_record.c_configured &
+                                    G_qme_record.c_cold_state;
 
     if( G_qme_record.c_hostboot_cores )
     {

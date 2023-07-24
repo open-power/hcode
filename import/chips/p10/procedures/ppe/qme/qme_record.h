@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2022                                                    */
+/* COPYRIGHT 2020,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -162,17 +162,21 @@ typedef struct
     uint32_t    scratchA;
     uint32_t    scratchB;
     uint64_t    qme_lfir;
-    // 26,27
+    // 26
+    uint32_t    c_cold_state;
+    uint32_t    reserved;
+    uint64_t    tbd;
+    // 27,28
     uint64_t    core_fir[4];
-    // 28
+    // 29
     uint32_t    stop11_counter[4];
-    // 29,30,31,32
+    // 30,31,32,33
     uint32_t    c_tfac_c2s_retry_limit[4];
     uint32_t    c_tfac_c2s_retry_total[4];
     uint32_t    c_tfac_s2c_retry_limit[4];
     uint32_t    c_tfac_s2c_retry_total[4];
 #ifdef CISR_TRACE
-    // 33,34,35,36,37,38,39,40,41,42
+    // 34,35,36,37,38,39,40,41,42,43
     uint32_t    cisr0_s11e[4];
     uint32_t    cisr1_s11e[4];
     uint32_t    cisr0_rwus[4];
