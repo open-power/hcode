@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -119,6 +119,7 @@ typedef struct pgpe_pstate
     uint32_t marker; //99
     uint32_t start_ttsr_cnt;  //100
     uint64_t start_ttsr;   //101
+    uint32_t spare_core_count; //102
 } pgpe_pstate_t;
 
 

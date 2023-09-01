@@ -86,6 +86,12 @@ void pgpe_pstate_init()
     G_pgpe_pstate.sort_core_count =  oppb->iddq.good_normal_cores_per_sort;
     mtmsr(msr);//Restore MSR
 
+
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SPARE_COUNT) & 0x80)
+    {
+        G_pgpe_pstate.spare_core_count = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SPARE_COUNT) & 0x7F;
+    }
+
     if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x80)
     {
         G_pgpe_pstate.eco_core_count = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_ECO_COUNT) & 0x7F;
@@ -101,15 +107,18 @@ void pgpe_pstate_init()
         }
     }
 
-    PK_TRACE_INF("PSS: sort_core_cores=%u; eco_core_count", G_pgpe_pstate.sort_core_count, G_pgpe_pstate.eco_core_count);
+    PK_TRACE_INF("PSS: sort_core_cores=%u; eco_core_count=%u spare_core_cnt=%u",
+                 G_pgpe_pstate.sort_core_count, G_pgpe_pstate.eco_core_count, G_pgpe_pstate.spare_core_count);
 
-    if(G_pgpe_pstate.sort_core_count <= G_pgpe_pstate.eco_core_count)
+    if(G_pgpe_pstate.sort_core_count <= G_pgpe_pstate.eco_core_count ||
+       G_pgpe_pstate.sort_core_count <= G_pgpe_pstate.spare_core_count)
     {
         G_pgpe_pstate.vratio_core_count = 1;
     }
     else
     {
-        G_pgpe_pstate.vratio_core_count = G_pgpe_pstate.sort_core_count - G_pgpe_pstate.eco_core_count;
+        G_pgpe_pstate.vratio_core_count = G_pgpe_pstate.sort_core_count -
+                                          G_pgpe_pstate.eco_core_count - G_pgpe_pstate.spare_core_count;
     }
 
     // If we don't have core bits set in CSSR, then
