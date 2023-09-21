@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -123,7 +123,7 @@ void pgpe_wov_ocs_init();
 void* pgpe_wov_ocs_data_addr();
 void pgpe_wov_ocs_enable();
 void pgpe_wov_ocs_disable();
-void pgpe_wov_ocs_determine_perf_loss();
+uint32_t pgpe_wov_ocs_determine_perf_loss();
 void pgpe_wov_ocs_update_dirty();
 void pgpe_wov_ocs_step_curr_pct();
 #define pgpe_wov_ocs_get_wov_tgt_pct() G_pgpe_wov_ocs.tgt_pct

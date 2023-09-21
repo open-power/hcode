@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2022                                                    */
+/* COPYRIGHT 2017,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -108,7 +108,11 @@ extern void main(void);
 void _iota_machine_check_handler()
 {
 #if ENABLE_MACHINE_CHECK_HANDLER
+#if defined __PPE_PGPE || __PPE_XGPE
+    asm volatile ("b __special_machine_check_handler");
+#else
     g_iota_machine_check_handler();
+#endif
 #else
     asm volatile ("tw 31, 0, 0");
 #endif
@@ -263,21 +267,30 @@ uint32_t G_pib_reset_flag = 0;
 void
 __ppe42_pib_reset_handler()
 {
-    // if already waited for pib to reset, panic as still fail
-    if (G_pib_reset_flag == 10 )
+    uint32_t srr1  = mfspr(SPRN_SRR1);
+
+    if ((srr1 & MSR_SIBRC) == MSR_SIBRC)
     {
-        G_pib_reset_flag = 0;
-        iota_halt();
+        // if already waited for pib to reset, panic as still fail
+        if (G_pib_reset_flag == 10 )
+        {
+            G_pib_reset_flag = 0;
+            iota_halt();
+        }
+
+        // note pib reset is being detected
+        // this flag will be cleared by fit timer if pib reset recovers
+        G_pib_reset_flag++;
+
+        // DELAY to wait pib reset to complete
+        volatile uint32_t loop;
+
+        for(loop = 0; loop < 6400; loop++);
     }
-
-    // note pib reset is being detected
-    // this flag will be cleared by fit timer if pib reset recovers
-    G_pib_reset_flag++;
-
-    // DELAY to wait pib reset to complete
-    volatile uint32_t loop;
-
-    for(loop = 0; loop < 6400; loop++);
+    else
+    {
+        g_iota_machine_check_handler();
+    }
 
 }
 #endif
