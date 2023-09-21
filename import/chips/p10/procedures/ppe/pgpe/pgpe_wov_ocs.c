@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -150,7 +150,7 @@ void pgpe_wov_ocs_disable()
     G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
 }
 
-void pgpe_wov_ocs_determine_perf_loss()
+uint32_t pgpe_wov_ocs_determine_perf_loss()
 {
     //PK_TRACE("OCS: Perf loss");
 
@@ -223,6 +223,8 @@ void pgpe_wov_ocs_determine_perf_loss()
         }
 
     }
+
+    return 0;
 }
 
 void pgpe_wov_ocs_update_dirty()

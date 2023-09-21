@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2023                                                    */
+/* COPYRIGHT 2020,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -71,28 +71,20 @@ __xgpe_machine_check_handler()
     uint32_t edr = mfspr(SPRN_EDR);
     uint32_t srr0 = mfspr(SPRN_SRR0);
     uint32_t sprg0 = mfspr(SPRN_SPRG0);
-    uint32_t srr1  = mfspr(SPRN_SRR1);
 
-    if (((srr1 & MSR_SIBRC) == MSR_SIBRC))
-    {
-        asm volatile("b __special_machine_check_handler");
-    }
-    else
-    {
-        /*
-         * @errortype
-         * @moduleid    XGPE_HCODE_SCOM
-         * @reasoncode  XGPE_SCOM_MACHINE_CHECK_ERROR
-         * @userdata1   EDR
-         * @userdata2   SRR0
-         * @userdata3   SPRG0
-         * @devdesc     XGPE had a SCOM failure
-         * @custdesc    Runtime embedded firmware error, detected scom failure
-         */
-        xgpe_errl_create(XGPE_SCOM_MACHINE_CHECK_ERROR,
-                         0, XGPE_HCODE_SCOM,
-                         edr, srr0, sprg0, ERRL_SEV_UNRECOVERABLE);
-    }
+    /*
+     * @errortype
+     * @moduleid    XGPE_HCODE_SCOM
+     * @reasoncode  XGPE_SCOM_MACHINE_CHECK_ERROR
+     * @userdata1   EDR
+     * @userdata2   SRR0
+     * @userdata3   SPRG0
+     * @devdesc     XGPE had a SCOM failure
+     * @custdesc    Runtime embedded firmware error, detected scom failure
+     */
+    xgpe_errl_create(XGPE_SCOM_MACHINE_CHECK_ERROR,
+                     0, XGPE_HCODE_SCOM,
+                     edr, srr0, sprg0, ERRL_SEV_UNRECOVERABLE);
 
 }
 
