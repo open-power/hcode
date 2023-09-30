@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2020                                                    */
+/* COPYRIGHT 2018,2023                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -77,7 +77,7 @@ struct errorPathEntry_t
     //      In                                                    Convert                 Xlate          Expected func to
     //     Addr             ChipUnitType     ChipUnitType str    Instance   ChipEC        Mode           fail for error path
     //  ------------------  ---------------- ----------------    ---------  ------        -----          -------------------
-    { 0x00000000260E0000, NONE,              "NONE",                1,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid chip unit type
+    { 0x00000000260E0000, PU_NONE,           "PU_NONE",                1,      0x00,   P10_DEFAULT_MODE,  CREATE_CHIP_UNIT_SCOM_ADDR }, // Invalid chip unit type
     { 0x000000001D050800, P10_NO_CU,         "P10_NO_CU",           0,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Chip Unit Type
     { 0x0000000014010000, PU_PERV_CHIPUNIT,  "PU_PERV_CHIPUNIT",    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid chip ID 0x14
     { 0x0000000026020400, PU_PERV_CHIPUNIT,  "PU_PERV_CHIPUNIT",    1,      0x00,   P10_DEFAULT_MODE,  IS_CHIP_UNIT_SCOM          }, // Invalid Endpoint 0x0
