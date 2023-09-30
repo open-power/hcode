@@ -220,7 +220,7 @@ p10ChipUnits_t getChipTargetType(std::string& i_chipStr)
     }
     else
     {
-        l_chipTargetType = NONE;
+        l_chipTargetType = PU_NONE;
     }
 
     return l_chipTargetType;
@@ -309,7 +309,7 @@ int main(int i_argc, char** i_argv)
             {
                 l_chip_target_type = getChipTargetType(l_chip_str);
 
-                if (l_chip_target_type == NONE) // Unrecognized chip type
+                if (l_chip_target_type == PU_NONE) // Unrecognized chip type
                 {
                     printf("ERROR: Unsupported chip target type: '%s'!\n\n", l_chip_str.c_str());
                     usage(i_argv[0]);
