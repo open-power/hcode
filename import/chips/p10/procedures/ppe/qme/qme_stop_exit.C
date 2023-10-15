@@ -706,6 +706,8 @@ qme_stop_exit()
         core_target = chip_target.getMulticast<fapi2::MULTICAST_AND>(fapi2::MCGROUP_GOOD_EQ,
                       static_cast<fapi2::MulticastCoreSelect>(G_qme_record.c_stop5_exit_targets));
 
+        //===============//
+
         // IF QMCR.MIXED_LPAR_MODE_DISABLE == 0
         if(! ( in32_sh(QME_LCL_QMCR) & BIT64SH(36) ) )
         {
@@ -724,14 +726,31 @@ qme_stop_exit()
 
             // Write value from masked QME Scratch B[20:23] to SCSR[31] for Core X (if fused, Core X+1 too)
             // this establishes the LPAR mode wire to the core(s) and caches(s)
+            // Note doing this after timefac shadow to avoid change how TB is counted during shadow process
             for( uint32_t core_mask = 8; core_mask; core_mask = core_mask >> 1 )
             {
                 if( G_qme_record.c_cold_state & core_mask & G_qme_record.c_stop5_exit_targets )
                 {
-                    // default per core lpar mode
-                    out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
-                    // sync scrb settings with this default to prevent unintentional mode change
-                    out32( QME_LCL_SCRB_OR, (core_mask << SHIFT32(23)) );
+                    // only need to change to per thread if attribute says so and
+                    // we are enabled to follow attribute; otherwise
+                    // both attribute being per core mode or phyp wants per core
+                    // when attribute isnt in control will result in per core mode
+                    if( (in32(QME_LCL_SCRB) & BIT32(QME_SCRB_USE_LPAR_ATTRIBUTE)) &&
+                        (G_qme_record.lpar_core_mode_select == 0) )
+                    {
+                        // default per thread lpar mode
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_CLEAR, core_mask ), BIT32(31) );
+                        // sync scrb settings with this default to prevent unintentional mode change
+                        out32( QME_LCL_SCRB_CLR, (core_mask << SHIFT32(23)) );
+                    }
+                    else
+                    {
+                        // default per core lpar mode
+                        out32( QME_LCL_CORE_ADDR_WR( QME_SCSR_WO_OR, core_mask ), BIT32(31) );
+                        // sync scrb settings with this default to prevent unintentional mode change
+                        out32( QME_LCL_SCRB_OR, (core_mask << SHIFT32(23)) );
+                    }
+
                     G_qme_record.c_cold_state &= ~core_mask;
                 }
                 else if( core_mask & G_qme_record.c_lpar_mode_enabled & G_qme_record.c_stop5_exit_targets )
@@ -756,9 +775,6 @@ qme_stop_exit()
                 }
             }
         }
-
-        //===============//
-
 
         //===============//
 

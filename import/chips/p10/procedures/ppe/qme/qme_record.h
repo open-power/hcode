@@ -164,8 +164,9 @@ typedef struct
     uint64_t    qme_lfir;
     // 26
     uint32_t    c_cold_state;
-    uint32_t    reserved;
-    uint64_t    tbd;
+    uint32_t    a_lpar_policy;
+    uint32_t    lpar_core_mode_select;
+    uint32_t    tbd;
     // 27,28
     uint64_t    core_fir[4];
     // 29
