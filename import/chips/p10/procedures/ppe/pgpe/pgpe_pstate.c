@@ -213,6 +213,9 @@ void pgpe_pstate_init()
     G_pgpe_pstate.start_ttsr_cnt = 0;
     G_pgpe_pstate.start_ttsr = 0;
 
+    G_pgpe_pstate.clock_off_accum_64th = 0;
+    G_pgpe_pstate.corecache_off_accum_64th = 0;
+
     PPE_GETSCOM_MC_Q_EQU(QME_RVCR, rvcr);
     G_pgpe_pstate.rvrm_volt  = (((rvcr >> 56) & 0xFF) <<
                                 3); //Extract RVID Value from RVCR[1:7] and then multiply by 8 to get RVRM voltage
@@ -1106,11 +1109,16 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
     uint32_t vratio_vdd_accum_64th = 0;
     uint32_t vratio_vcs_accum_64th = 0;
     uint32_t active_core_accum_64th = 0;
+    uint32_t temp_index_format = 0;
+    uint32_t msd_mask;
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)OCC_SHARED_SRAM_ADDR_START;
     iddq_activity_t* G_p_iddq_act_val =  (iddq_activity_t*)(OCC_SHARED_SRAM_ADDR_START + occ_shared_data->iddq_data_offset);
 
     ccsr = in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW);
     ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
+
+    G_pgpe_pstate.clock_off_accum_64th = 0;
+    G_pgpe_pstate.corecache_off_accum_64th = 0;
 
     for (c = 0; c < MAX_CORES; c++)
     {
@@ -1122,7 +1130,11 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
         if (ccsr & CORE_MASK(c))
         {
             uint32_t coreclk_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECLK_OFF] << 3;
+            G_pgpe_pstate.clock_off_accum_64th += coreclk_off_64th;
+
             uint32_t corecache_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_CORECACHE_OFF] << 3;
+            G_pgpe_pstate.corecache_off_accum_64th += corecache_off_64th;
+
             uint32_t mma_off_64th = G_p_iddq_act_val->act_val[c][ACT_CNT_IDX_MMA_OFF] << 3;
             uint32_t stopped_64th = coreclk_off_64th + corecache_off_64th;
             active_core_accum_64th += 64 - stopped_64th;
@@ -1134,12 +1146,17 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
         }
     }
 
-    PK_TRACE_DBG("PSS: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
+    G_pgpe_pstate.active_core_accum_64th = active_core_accum_64th;
+    G_pgpe_pstate.vratio_vdd_accum_64th = vratio_vdd_accum_64th;
+
+    PK_TRACE_INF("PSS: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
                  active_core_accum_64th, vratio_vdd_accum_64th, vratio_vcs_accum_64th);
     //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
-    G_pgpe_pstate.vratio_index_format       = ((((active_core_accum_64th) << 10) - 1) /
-            (G_pgpe_pstate.vratio_core_count));
+    G_pgpe_pstate.vratio_index_format       = (((active_core_accum_64th << 10) - 1) /
+            G_pgpe_pstate.vratio_core_count);
+    PK_TRACE_INF("PSS: vratio_index_format=0x%08x", G_pgpe_pstate.vratio_index_format);
     G_pgpe_pstate.active_core_ratio_64th    = G_pgpe_pstate.vratio_index_format >> 10; //Index format back to 64ths
+
     G_pgpe_pstate.vratio_vdd_snapup_64th    = ((vratio_vdd_accum_64th + 63) /
             (G_pgpe_pstate.vratio_core_count));
     G_pgpe_pstate.vratio_vcs_snapup_64th    = ((vratio_vcs_accum_64th + 63) /
@@ -1148,6 +1165,7 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
             (G_pgpe_pstate.vratio_core_count));
     G_pgpe_pstate.vratio_vcs_rounded_64th   = ((vratio_vcs_accum_64th + 32) /
             (G_pgpe_pstate.vratio_core_count));
+
     G_pgpe_pstate.vratio_vdd_snapup_64th    = G_pgpe_pstate.vratio_vdd_snapup_64th < 64 ?
             G_pgpe_pstate.vratio_vdd_snapup_64th : 64;
     G_pgpe_pstate.vratio_vcs_snapup_64th    = G_pgpe_pstate.vratio_vcs_snapup_64th < 64 ?
@@ -1157,16 +1175,18 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
     G_pgpe_pstate.vratio_vcs_rounded_64th   = G_pgpe_pstate.vratio_vcs_rounded_64th < 64 ?
             G_pgpe_pstate.vratio_vcs_rounded_64th : 64;
 
+    temp_index_format = (((vratio_vdd_accum_64th << 10) - 1) / G_pgpe_pstate.vratio_core_count);
+    msd_mask = (temp_index_format - 0x07FF) & 0xFF000;
+    G_pgpe_pstate.vratio_vdd_rounded = msd_mask | 0x00FFF;
 
-    G_pgpe_pstate.vratio_vdd_rounded        = ((((vratio_vdd_accum_64th + 32) << 10) - 1) /
-            (G_pgpe_pstate.vratio_core_count));
-    G_pgpe_pstate.vratio_vcs_rounded        = ((((vratio_vcs_accum_64th + 32) << 10) - 1) /
-            (G_pgpe_pstate.vratio_core_count));
+    temp_index_format = (((vratio_vcs_accum_64th << 10) - 1) / G_pgpe_pstate.vratio_core_count);
+    msd_mask = (temp_index_format - 0x07FF) & 0xFF000;
+    G_pgpe_pstate.vratio_vcs_rounded = msd_mask | 0x00FFF;
+
     G_pgpe_pstate.vratio_vdd_rounded        = G_pgpe_pstate.vratio_vdd_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vdd_rounded
             : 0xFFFF;
     G_pgpe_pstate.vratio_vcs_rounded        = G_pgpe_pstate.vratio_vcs_rounded <= 0xFFFF ? G_pgpe_pstate.vratio_vcs_rounded
             : 0xFFFF;
-
 
     G_pgpe_pstate.vratio_vdd_loadline_64th  = G_pgpe_pstate.vratio_vdd_snapup_64th;
     G_pgpe_pstate.vratio_vdd_ceff_inst_64th = G_pgpe_pstate.vratio_vdd_rounded_64th;
@@ -1176,11 +1196,10 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
 void pgpe_pstate_compute_vindex()
 {
-    uint32_t msd = ((G_pgpe_pstate.vratio_index_format & 0xF000) >> 12);
-    uint32_t rem = (G_pgpe_pstate.vratio_index_format & 0x0FFF);
-    uint32_t idx_rnd = (rem > 0x800) ? 1 : 0;
-    G_pgpe_pstate.vindex = (msd >= 5) ? (msd - 5 + idx_rnd) : 0;
-    PK_TRACE_INF("PSS: Vindex=0x%x", G_pgpe_pstate.vindex);
+    uint32_t msd = (((G_pgpe_pstate.vratio_index_format - 0x07FF) & 0xF000) >> 12);
+    G_pgpe_pstate.vindex = (msd >= 4) ? (msd - 4) : 0;
+
+    PK_TRACE_INF("PSS: Vindex_format=0x%x, Vindex=0x%x", G_pgpe_pstate.vratio_index_format, G_pgpe_pstate.vindex);
 }
 
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)

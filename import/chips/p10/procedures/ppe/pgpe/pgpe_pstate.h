@@ -120,6 +120,10 @@ typedef struct pgpe_pstate
     uint32_t start_ttsr_cnt;  //100
     uint64_t start_ttsr;   //101
     uint32_t spare_core_count; //102
+    uint32_t active_core_accum_64th;
+    uint32_t vratio_vdd_accum_64th;
+    uint32_t clock_off_accum_64th;
+    uint32_t corecache_off_accum_64th;
 } pgpe_pstate_t;
 
 
