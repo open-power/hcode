@@ -565,12 +565,14 @@ void handle_wof_iddq_values()
                     G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_MMA_OFF]++;
                 }
             }
+
             //if core c is Vmin(1)
-            else if ((opitasv1 & CORE_MASK(c)))
+            if ((opitasv1 & CORE_MASK(c)))
             {
                 G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORE_VMIN]++;
             }
-            else if (opitasv0 & CORE_MASK(c))
+
+            if (opitasv0 & CORE_MASK(c))
             {
                 G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECLK_OFF]++;
             }
