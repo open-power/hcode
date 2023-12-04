@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019,2020
+# COPYRIGHT 2019,2023
 # [+] International Business Machines Corp.
 #
 #
@@ -237,3 +237,8 @@ echo ""
 echo "Running EKB pre-commit-actions"
 echo ""
 cd ${PROJECT_ROOT} && ${PROJECT_ROOT}/tools/hooks/tools/pre-commit-actions ${beautify_file_list[*]}
+
+echo ""
+echo "Running d7nmphy_update_p10_io_power.pl"
+echo ""
+${PROJECT_ROOT}/chips/p10/procedures/ppe/iohs/d7nmphy_update_p10_io_power.pl
