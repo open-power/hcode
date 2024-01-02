@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -94,16 +94,40 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 #define pgpe_gppb_get_ops_ps(pt_set, idx)  G_gppb_operating_points_set[pt_set][idx].pstate
 #define pgpe_gppb_get_ops_vdd(pt_set, idx) G_gppb_operating_points_set[pt_set][idx].vdd_mv
 #define pgpe_gppb_get_ops_vcs(pt_set, idx) G_gppb_operating_points_set[pt_set][idx].vcs_mv
-#define pgpe_gppb_get_ops_idd_ac(pt_set, idx) G_gppb_operating_points_set[pt_set][idx].idd_tdp_ac_10ma
-#define pgpe_gppb_get_ops_idd_dc(pt_set, idx) G_gppb_operating_points_set[pt_set][idx].idd_tdp_dc_10ma
-#define pgpe_gppb_get_ops_ics_ac(pt_set, idx) G_gppb_operating_points_set[pt_set][idx].ics_tdp_ac_10ma
-#define pgpe_gppb_get_ops_ics_dc(pt_set, idx)  G_gppb_operating_points_set[pt_set][idx].ics_tdp_dc_10ma
+
+
+
+#define pgpe_gppb_get_ops_idd_ac(pt_set, idx) (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
+    (G_gppb_operating_points_set[pt_set][idx].idd_rdp_ac_10ma) : \
+    (G_gppb_operating_points_set[pt_set][idx].idd_tdp_ac_10ma)
+
+#define pgpe_gppb_get_ops_idd_dc(pt_set, idx) (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
+    (G_gppb_operating_points_set[pt_set][idx].idd_rdp_dc_10ma) : \
+    (G_gppb_operating_points_set[pt_set][idx].idd_tdp_dc_10ma)
+
+#define pgpe_gppb_get_ops_ics_ac(pt_set, idx)  (G_gppb_operating_points_set[pt_set][idx].ics_tdp_ac_10ma)
+#define pgpe_gppb_get_ops_ics_dc(pt_set, idx)  (G_gppb_operating_points_set[pt_set][idx].ics_tdp_dc_10ma)
+
+
 #define pgpe_gppb_get_psv_slope(rail, pt_set, region) G_gppb_poundv_slopes->ps_voltage_slopes[rail][pt_set][region]
 #define pgpe_gppb_get_vps_slope(rail, pt_set, region)  G_gppb_poundv_slopes->voltage_ps_slopes[rail][pt_set][region]
-#define pgpe_gppb_get_ps_iac_slope(rail, pt_set, region)  G_gppb_poundv_slopes->ps_ac_current_tdp[rail][pt_set][region]
-#define pgpe_gppb_get_ps_idc_slope(rail, pt_set, region)  G_gppb_poundv_slopes->ps_dc_current_tdp[rail][pt_set][region]
-#define pgpe_gppb_get_iac_ps_slope(rail, pt_set, region) G_gppb_poundv_slopes->ac_current_ps_tdp[rail][pt_set][region]
-#define pgpe_gppb_get_idc_ps_slope(rail, pt_set, region) G_gppb_poundv_slopes->ac_current_ps_tdp[rail][pt_set][region]
+
+#define pgpe_gppb_get_ps_iac_slope(rail, pt_set, region)  (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
+                                   (G_gppb_poundv_slopes->ps_ac_current_rdp[rail][pt_set][region]) : \
+                                   (G_gppb_poundv_slopes->ps_ac_current_tdp[rail][pt_set][region])
+
+#define pgpe_gppb_get_ps_idc_slope(rail, pt_set, region)  (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP) ) ? \
+                                   (G_gppb_poundv_slopes->ps_dc_current_rdp[rail][pt_set][region]) : \
+                                   (G_gppb_poundv_slopes->ps_dc_current_tdp[rail][pt_set][region])
+
+
+#define pgpe_gppb_get_ps_iac_ics_slope(rail, pt_set, region)  G_gppb_poundv_slopes->ps_ac_current_tdp[rail][pt_set][region]
+#define pgpe_gppb_get_ps_idc_ics_slope(rail, pt_set, region)  G_gppb_poundv_slopes->ps_dc_current_tdp[rail][pt_set][region]
+
+
+
+#define pgpe_gppb_get_ics_iac_ps_slope(rail, pt_set, region) G_gppb_poundv_slopes->ac_current_ps_tdp[rail][pt_set][region]
+#define pgpe_gppb_get_ics_idc_ps_slope(rail, pt_set, region) G_gppb_poundv_slopes->ac_current_ps_tdp[rail][pt_set][region]
 
 //WOV
 #define pgpe_gppb_get_wov_underv_perf_loss_thresh_pct() G_gppb_wov->wov_underv_perf_loss_thresh_pct
@@ -139,5 +163,15 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 //THR
 #define pgpe_gppb_get_thr_ctrl_kp()    G_gppb_thr_ctrl->thr_kp
 #define pgpe_gppb_get_thr_ctrl_ki()    G_gppb_thr_ctrl->thr_ki
+
+#define pgpe_gppb_get_iac_ps_slope(rail, pt_set, region)  (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
+                                   (G_gppb_poundv_slopes->ac_current_ps_rdp[rail][pt_set][region]) : \
+                                   (G_gppb_poundv_slopes->ac_current_ps_tdp[rail][pt_set][region])
+
+
+#define pgpe_gppb_get_idc_ps_slope(rail, pt_set, region)  (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
+                                   (G_gppb_poundv_slopes->dc_current_ps_rdp[rail][pt_set][region]) : \
+                                   (G_gppb_poundv_slopes->dc_current_ps_tdp[rail][pt_set][region])
+
 
 #endif

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -52,6 +52,9 @@ uint32_t pgpe_pstate_get_idd_ac_region(uint32_t idd); //unused
 uint32_t pgpe_pstate_get_idd_dc_region(uint32_t idd); //unused
 uint32_t pgpe_pstate_get_ics_ac_region(uint32_t ics); //unused
 uint32_t pgpe_pstate_get_ics_dc_region(uint32_t ics); //unused
+
+uint32_t compute_ivfs_slope_uplift (uint32_t cf_slope_val, uint32_t slope_data,
+                                    uint32_t region_data, uint32_t pstate_slope );
 
 pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
 
@@ -1205,19 +1208,22 @@ void pgpe_pstate_compute_vindex()
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t vdd;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
 
-    //Round-up by adding 1/2
-    vdd = (((pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r)) *
-            (-ps + pgpe_gppb_get_ops_ps(vpd_pt_set, r))) >> (VID_SLOPE_FP_SHIFT_12 - 1)) +
-          (pgpe_gppb_get_ops_vdd(vpd_pt_set, r) << 1) + 1;
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     VID_SLOPE_FP_SHIFT_12;
 
-    vdd = vdd >> 1; //Shift back
+    uint32_t slope  = (pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
 
-    PK_TRACE_DBG("PS: ps=0x%x, r=%u, vdd=0x%x", ps, r, vdd);
+    vdd = compute_ivfs_slope_uplift(pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r),
+                                    slope, ((pgpe_gppb_get_ops_vdd(vpd_pt_set, r) << 1) + 1), 0);
+    PK_TRACE_INF("PS: ps=0x%x, r=%u, vdd=0x%x", ps, r, vdd);
     PK_TRACE_DBG("PS: slope=0x%x,ps=%u,vdd=0x%x", pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r),
                  pgpe_gppb_get_ops_ps(vpd_pt_set, r),
                  pgpe_gppb_get_ops_vdd(vpd_pt_set, r));
+
 
     return vdd;
 }
@@ -1225,14 +1231,17 @@ uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t vcs;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
 
-    //Round-up by adding 1/2
-    vcs = (((pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r)) *
-            (-ps + pgpe_gppb_get_ops_ps(vpd_pt_set, r))) >> (VID_SLOPE_FP_SHIFT_12 - 1)) +
-          (pgpe_gppb_get_ops_vcs(vpd_pt_set, r) << 1) + 1;
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     VID_SLOPE_FP_SHIFT_12;
 
-    vcs = vcs >> 1; //Shift back
+    uint32_t slope  = (pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r) * pstate) >>
+                      (shift - 1) ;
+
+    vcs = compute_ivfs_slope_uplift(pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r),
+                                    slope, ((pgpe_gppb_get_ops_vcs(vpd_pt_set, r) << 1) + 1), 0);
 
     //PK_TRACE("PS: ps=0x%x, r=%u, vdd=0x%x", ps, r, vcs);
     /*PK_TRACE("PS: slope=0x%x,ps=%u,vcs=0x%x", pgpe_gppb_get_psv_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r),
@@ -1280,18 +1289,24 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
 uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t idd_ac;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
 
-    //Round-up by adding 1/2
-    idd_ac = (((pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r )) *
-               (-ps + pgpe_gppb_get_ops_ps(vpd_pt_set, r))) >> (I_SLOPE_FP_SHIFT_9 - 1)) +
-             (pgpe_gppb_get_ops_idd_ac(vpd_pt_set, r) << 1) + 1;
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     I_SLOPE_FP_SHIFT_9;
 
-    idd_ac = idd_ac >> 1; //Shift back
-    //PK_TRACE("PS: ps=0x%x, r=%u, idd_ac=0x%x", ps, r, idd_ac);
-    /*PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_ac=0x%x", pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r),
-             pgpe_gppb_get_ops_ps(vpd_pt_set, r),
-             pgpe_gppb_get_ops_idd_ac(vpd_pt_set, r));*/
+    uint32_t slope  = (pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
+
+    idd_ac = compute_ivfs_slope_uplift(pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                                       slope, (((pgpe_gppb_get_ops_idd_ac(vpd_pt_set, r)) << 1) + 1), 0);
+
+
+
+    PK_TRACE_INF("PS: ps=0x%x, r=%u, idd_ac=0x%x", ps, r, idd_ac);
+    /*    PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_ac=0x%x", pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                 pgpe_gppb_get_ops_ps(vpd_pt_set, r),
+                 pgpe_gppb_get_ops_idd_ac(vpd_pt_set, r));*/
 
 
     return idd_ac;
@@ -1300,18 +1315,24 @@ uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t idd_dc;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
 
-    //Round-up by adding 1/2
-    idd_dc = (((pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r)) *
-               (-ps + pgpe_gppb_get_ops_ps(vpd_pt_set, r))) >> (I_SLOPE_FP_SHIFT_9 - 1)) +
-             (pgpe_gppb_get_ops_idd_dc(vpd_pt_set, r) << 1) + 1;
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     I_SLOPE_FP_SHIFT_9;
 
-    idd_dc = idd_dc >> 1; //Shift back
-    //PK_TRACE("PS: ps=0x%x, r=%u, idd_dc=0x%x", ps, r, idd_dc);
-    /*PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_dc=0x%x", pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_VDD, vpd_pt_set, r),
-             pgpe_gppb_get_ops_ps(vpd_pt_set, r),
-             pgpe_gppb_get_ops_idd_dc(vpd_pt_set, r));*/
+    uint32_t slope  = (pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
+
+    idd_dc = compute_ivfs_slope_uplift(pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                                       slope, (((pgpe_gppb_get_ops_idd_dc(vpd_pt_set, r) << 1)) + 1), 0);
+
+
+
+    PK_TRACE("PS: ps=0x%x, r=%u, idd_dc=0x%x", ps, r, idd_dc);
+    /*    PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_dc=0x%x", pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                 pgpe_gppb_get_ops_ps(vpd_pt_set, r),
+                 pgpe_gppb_get_ops_idd_dc(vpd_pt_set, r));*/
 
     return idd_dc;
 }
@@ -1319,16 +1340,21 @@ uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t ics_ac;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
 
-    //Round-up by adding 1/2
-    ics_ac = (((pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r)) *
-               (-ps + pgpe_gppb_get_ops_ps(vpd_pt_set, r))) >> (I_SLOPE_FP_SHIFT_9 - 1)) +
-             (pgpe_gppb_get_ops_ics_ac(vpd_pt_set, r) << 1) + 1;
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     I_SLOPE_FP_SHIFT_9;
 
-    ics_ac = ics_ac >> 1; //Shift back
+    uint32_t slope  = (pgpe_gppb_get_ps_iac_ics_slope(RUNTIME_RAIL_ICS, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
+
+    ics_ac = compute_ivfs_slope_uplift(pgpe_gppb_get_ps_iac_ics_slope(RUNTIME_RAIL_ICS, vpd_pt_set, r),
+                                       slope, ((pgpe_gppb_get_ops_ics_ac(vpd_pt_set, r) << 1) + 1), 0);
+
+
     //PK_TRACE("PS: ps=0x%x, r=%u, ics_ac=0x%x", ps, r, ics_ac);
-    /*PK_TRACE("PS: slope=0x%x,ps=0x%x,ics_ac=0x%x", pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r),
+    /*PK_TRACE("PS: slope=0x%x,ps=0x%x,ics_ac=0x%x", pgpe_gppb_get_ps_iac_ics_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r),
              pgpe_gppb_get_ops_ps(vpd_pt_set, r),
              pgpe_gppb_get_ops_ics_ac(vpd_pt_set, r));*/
 
@@ -1338,16 +1364,21 @@ uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 uint32_t pgpe_pstate_intp_ics_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t ics_dc;
-    uint32_t r  = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
 
-    //Round-up by adding 1/2
-    ics_dc = (((pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r)) *
-               (-ps + pgpe_gppb_get_ops_ps(vpd_pt_set, r))) >> (I_SLOPE_FP_SHIFT_9 - 1)) +
-             (pgpe_gppb_get_ops_ics_dc(vpd_pt_set, r) << 1) + 1;
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     I_SLOPE_FP_SHIFT_9;
 
-    ics_dc = ics_dc >> 1; //Shift back
+    uint32_t slope  = (pgpe_gppb_get_ps_idc_ics_slope(RUNTIME_RAIL_ICS, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
+
+    ics_dc = compute_ivfs_slope_uplift(pgpe_gppb_get_ps_idc_ics_slope(RUNTIME_RAIL_ICS, vpd_pt_set, r),
+                                       slope, ((pgpe_gppb_get_ops_ics_dc(vpd_pt_set, r) << 1) + 1), 0);
+
+
     //PK_TRACE("PS: ps=0x%x, r=%u, ics_dc=0x%x", ps, r, ics_dc);
-    /*PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_dc=0x%x", pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r),
+    /*PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_dc=0x%x", pgpe_gppb_get_ps_idc_ics_slope(RUNTIME_RAIL_VCS, vpd_pt_set, r),
              pgpe_gppb_get_ops_ps(vpd_pt_set, r),
              pgpe_gppb_get_ops_ics_dc(vpd_pt_set, r));*/
 
@@ -1357,13 +1388,30 @@ uint32_t pgpe_pstate_intp_ics_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd)
 {
     uint32_t ps;
-    uint32_t r = pgpe_pstate_get_vdd_region(vdd);
+    uint32_t r    = pgpe_pstate_get_vdd_region(vdd);
+    uint32_t slope = 0;
+    uint32_t neg_slope = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_NEGATIVE_SLOPE_SUPPORT) ?
+                         pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VDD, VPD_PT_SET_BIASED, r) & 0x1 : 0;
 
-    //Do the math using shifted by 1.
-    ps = -(((pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VDD, VPD_PT_SET_BIASED, r)) *
-            (vdd - pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, r))) >> (VID_SLOPE_FP_SHIFT_12 - 1)) +
-         (pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r) << 1)  ;
+    if ( neg_slope )
+    {
+        slope = ((pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VDD, VPD_PT_SET_BIASED, r) & 0xFFFE) *
+                 (-vdd + pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, r))) >> (VID_SLOPE_FP_SHIFT_8 - 1);
+    }
+    else
+    {
+        uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                         VID_SLOPE_FP_SHIFT_12;
+
+        slope = (pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VDD, VPD_PT_SET_BIASED, r) *
+                 (vdd - pgpe_gppb_get_ops_vdd(VPD_PT_SET_BIASED, r))) >> (shift - 1);
+    }
+
+    ps =  (pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r) << 1) - slope;
+
     ps = ps >> 1;//Shift it back
+
+
 
     //We need to make sure ps doesn't go below region0
     //Here pstate value is greater means lower frequency, it should be
@@ -1373,20 +1421,54 @@ uint32_t pgpe_pstate_intp_ps_from_vdd(uint32_t vdd)
         ps = G_pgpe_pstate.pstate_safe;
     }
 
-
+    PK_TRACE_INF("pgpe_pstate_intp_ps_from_vdd ps %d", ps);
 
     return ps;
+}
+
+uint32_t compute_ivfs_slope_uplift (uint32_t cf_slope_val, uint32_t slope_data, uint32_t region_data ,
+                                    uint32_t pstate_slope)
+{
+    uint32_t result = 0;
+
+    result = (region_data + slope_data) >> 1;
+
+    if(pgpe_gppb_get_pgpe_flags(PGPE_FLAG_NEGATIVE_SLOPE_SUPPORT))
+    {
+        if (cf_slope_val & 0x0001 || pstate_slope )
+        {
+            result = (region_data - slope_data) >> 1;
+        }
+    }
+
+    return (result);
 }
 
 uint32_t pgpe_pstate_intp_ps_from_vcs(uint32_t vcs)
 {
     uint32_t ps;
-    uint32_t r = pgpe_pstate_get_vcs_region(vcs);
+    uint32_t r    = pgpe_pstate_get_vcs_region(vcs);
+    uint32_t neg_slope = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_NEGATIVE_SLOPE_SUPPORT) ?
+                         pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VCS, VPD_PT_SET_BIASED, r) & 0x1 : 0;
+    uint32_t slope;
 
-    //Do the math using shifted by 1.
-    ps = -(((pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VCS, VPD_PT_SET_BIASED, r)) *
-            (vcs - pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, r))) >> (VID_SLOPE_FP_SHIFT_12 - 1)) +
-         (pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r) << 1)  ;
+    if ( neg_slope )
+    {
+        slope = ((pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VCS, VPD_PT_SET_BIASED, r) & 0xFFFE) *
+                 (-vcs + pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, r))) >> (VID_SLOPE_FP_SHIFT_8 - 1);
+    }
+    else
+    {
+        uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                         VID_SLOPE_FP_SHIFT_12;
+
+        slope = (pgpe_gppb_get_vps_slope(RUNTIME_RAIL_VCS, VPD_PT_SET_BIASED, r) *
+                 (vcs - pgpe_gppb_get_ops_vcs(VPD_PT_SET_BIASED, r))) >> (shift - 1);
+    }
+
+
+    ps =  (pgpe_gppb_get_ops_ps(VPD_PT_SET_BIASED, r) << 1) - slope;
+
     ps = ps >> 1;//Shift it back
 
     return ps;
