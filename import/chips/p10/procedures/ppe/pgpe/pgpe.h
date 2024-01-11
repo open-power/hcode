@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -62,7 +62,7 @@
 
 
 #define MAX_DATA_STRUCT 16
-
+#ifdef __PPE_PGPE
 enum  DATA_STRUCT_TABLE_IDX
 {
     DATA_EVENT_MANAGER      = 0,
@@ -75,6 +75,7 @@ enum  DATA_STRUCT_TABLE_IDX
     DATA_THR_CTRL           = 7,
     DATA_AVSBUS_DRIVER      = 8,
 };
+#endif
 
 typedef struct data_struct_entry
 {

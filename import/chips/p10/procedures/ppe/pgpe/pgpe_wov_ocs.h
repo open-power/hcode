@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,16 +25,23 @@
 #ifndef __PGPE_WOV_OCS_H__
 #define __PGPE_WOV_OCS_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __PARSER_TOOL__
-    #include "pgpe.h"
+#include "pgpe.h"
 #else
-    #include "pstate_pgpe_occ_api.h"
+#include "pstate_pgpe_occ_api.h"
 #endif
 
 
 
-
+#ifdef __PPE_PGPE
 #define HYSTERESIS_TICKS 3
+#else
+#define HYSTERESIS_TICKS 0
+#endif
 
 enum WOV_STATUS
 {
@@ -136,4 +143,9 @@ void pgpe_wov_ocs_step_curr_pct();
 #define pgpe_wov_ocs_is_wov_underv_enabled() (G_pgpe_wov_ocs.wov_uv_status == WOV_STATUS_ENABLED)
 #define pgpe_wov_ocs_is_ocs_enabled() (G_pgpe_wov_ocs.ocs_status == OCS_STATUS_ENABLED)
 #define pgpe_wov_ocs_is_overcurrent() (G_pgpe_wov_ocs.overcurrent_flag == OCS_OVER_THRESH)
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
 #endif

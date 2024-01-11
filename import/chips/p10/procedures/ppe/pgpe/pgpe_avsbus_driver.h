@@ -25,6 +25,10 @@
 #ifndef __PGPE_AVSBUS_DRIVER_H__
 #define __PGPE_AVSBUS_DRIVER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pgpe.h"
 #include "pgpe_pstate.h"
 
@@ -192,5 +196,9 @@ void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_
                              uint32_t i_cmd_type);
 void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask,
                               uint32_t* ret_status, uint32_t current_scale_idx);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif

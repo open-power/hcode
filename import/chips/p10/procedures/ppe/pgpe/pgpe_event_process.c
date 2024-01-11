@@ -47,6 +47,7 @@
 #include "errlutil.h"
 #include "p10_scom_proc_9.H"
 
+#ifdef __PPE_PGPE
 extern  uint64_t  g_oimr_override;
 
 //Local Functions
@@ -148,12 +149,15 @@ void pgpe_process_pstate_start_stop(void* eargs)
     pgpe_occ_send_ipc_ack_cmd(cmd);
     ppe_trace_op(PGPE_OPT_START_STOP_ACK, 0);
 }
+#endif
 
 void pgpe_process_pstate_start()
 {
     PK_TRACE_INF("PEP: PS Start");
+    uint32_t voltage = 0;
+#ifdef __PPE_PGPE
+    uint32_t vcs_before_vdd = 0;
     uint32_t sync_pstate;
-    uint32_t voltage, vcs_before_vdd = 0;
     int32_t move_frequency;
     dpll_mode_t dpll_mode;
     int32_t delta_mv;
@@ -202,6 +206,7 @@ void pgpe_process_pstate_start()
 
     pgpe_pstate_set(pstate_target, sync_pstate);
     pgpe_pstate_set(pstate_next, sync_pstate);
+#endif
 
     //4. Read the external VDD and VCS
     pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
@@ -214,6 +219,8 @@ void pgpe_process_pstate_start()
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
     PK_TRACE_INF("PEP: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));
+
+#ifdef __PPE_PGPE
 
     //5. If frequency moving down, then adjust frequency
     if (move_frequency < 0 )
@@ -241,7 +248,17 @@ void pgpe_process_pstate_start()
                     G_pgpe_pstate.vratio_vcs_loadline_64th) >> 6);
     pgpe_pstate_set(vdd_next_ext, pgpe_pstate_get(vdd_next) + pgpe_pstate_get(vdd_next_uplift));
     pgpe_pstate_set(vcs_next_ext, pgpe_pstate_get(vcs_next) + pgpe_pstate_get(vcs_next_uplift));
+#else
+    // For non-PGPE applications, initialize the internal to the external as uplifts are not known (left to 0)
+    pgpe_pstate_set(vdd_curr,        pgpe_pstate_get(vdd_curr_ext));
+    pgpe_pstate_set(vcs_curr,        pgpe_pstate_get(vcs_curr_ext));
+    pgpe_pstate_set(vdd_next,        pgpe_pstate_get(vdd_curr_ext));
+    pgpe_pstate_set(vcs_next,        pgpe_pstate_get(vcs_curr_ext));
 
+    PK_TRACE_INF("PEP: vdd_curr=%u vcs_curr=%u",
+                 pgpe_pstate_get(vdd_curr),
+                 pgpe_pstate_get(vcs_curr));
+#endif
     PK_TRACE_INF("PEP: vdd_next=%u vdd_next_up=%u, vdd_next_ext=%u",
                  pgpe_pstate_get(vdd_next),
                  pgpe_pstate_get(vdd_next_uplift),
@@ -250,6 +267,8 @@ void pgpe_process_pstate_start()
                  pgpe_pstate_get(vcs_next),
                  pgpe_pstate_get(vcs_next_uplift),
                  pgpe_pstate_get(vcs_next_ext));
+
+#ifdef __PPE_PGPE
 
     //7. Perform voltage adjustment
     //If new external VRM(VDD and VCS) set points different from present value, then
@@ -443,9 +462,11 @@ void pgpe_process_pstate_start()
      *         PK_TRACE_INF("Halting on Pstate Start");
      *         IOTA_PANIC(PGPE_XSTOP_GPE2)
      */
-
+#endif
 }
 
+
+#ifdef __PPE_PGPE
 void pgpe_process_pstate_stop()
 {
     PK_TRACE_INF("PEP: PS Stop");
@@ -1076,3 +1097,5 @@ void pgpe_process_stop_beacon()
     pgpe_event_tbl_set_status(EV_IPC_STOP_BEACON, EVENT_INACTIVE);
     pgpe_occ_send_ipc_ack_type_rc(EV_IPC_STOP_BEACON, PGPE_RC_SUCCESS);
 }
+
+#endif  // PGPE inclusion

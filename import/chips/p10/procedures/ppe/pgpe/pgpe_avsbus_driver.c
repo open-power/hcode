@@ -588,6 +588,7 @@ void pgpe_avsbus_init()
     PK_TRACE_INF("AVS: VCS TB tick time (incr, decr)        = %u %u tb ticks",
                  G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS], G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS]);
 
+#ifdef __PPE_PGPE
     WofTablesHeader_t* G_wof_table_address = (WofTablesHeader_t*)pgpe_header_get(g_pgpe_wofTableAddress);
     G_pgpe_avsbus.wof_table_header_boost_current_10ma = G_wof_table_address->boost_current_a * 100;  // 0.01A = 10mA
     PK_TRACE_INF("AVS: WOF Table Boost Current (10mA)       = %u 0x%X",
@@ -599,6 +600,7 @@ void pgpe_avsbus_init()
     }
 
     PK_TRACE_INF("AVS: Saddleback Rollover Enabled          = %u", G_pgpe_avsbus.saddleback_rollerover_enabled );
+#endif
 }
 
 
@@ -684,6 +686,8 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         if (volt_mv > AVS_DRIVER_MAX_EXTERNAL_VOLTAGE  ||
             volt_mv < AVS_DRIVER_MIN_EXTERNAL_VOLTAGE)
         {
+            PK_TRACE_ERR("AVS: Volt_W value outside of bounds. Value mv=%d, Max mv=%d, Min mv=%d",
+                         volt_mv, AVS_DRIVER_MAX_EXTERNAL_VOLTAGE, AVS_DRIVER_MIN_EXTERNAL_VOLTAGE);
             pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_OUT_OF_BOUNDS);
             pgpe_error_state_loop();
         }

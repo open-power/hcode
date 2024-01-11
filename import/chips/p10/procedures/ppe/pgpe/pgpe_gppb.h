@@ -141,6 +141,7 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 #define pgpe_gppb_get_wov_overv_max_pct()  G_gppb_wov->wov_overv_max_pct
 #define pgpe_gppb_get_wov_idd_thresh() G_gppb_wov->wov_idd_thresh
 #define pgpe_gppb_get_wov_dirty_undercurr_control(droop_level) G_gppb_wov->wov_dirty_undercurr_control[droop_level]
+#define pgpe_gppb_get_wov_underv_extended_max_pct()  G_gppb_wov->wov_underv_extended_max_pct
 
 //DDS
 #define pgpe_gppb_get_dds_delay_ps_slope(pt_set, core, region)  G_gppb_poundw_slopes->ps_dds_delay_slopes[pt_set][core][region]

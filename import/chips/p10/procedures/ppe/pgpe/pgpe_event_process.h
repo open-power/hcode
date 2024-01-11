@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -31,6 +31,11 @@ enum PGPE_PROCESS_SAFE_MODE
     PGPE_PROCESS_SAFE_MODE_TRUE = 1
 };
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void pgpe_process_pstate_start_stop(void* args);
 void pgpe_process_pstate_start();
 void pgpe_process_pstate_stop();
@@ -51,5 +56,8 @@ void pgpe_process_xgpe_fault(enum PGPE_PROCESS_SAFE_MODE safe_mode_flag);
 void pgpe_process_pvref_fault();
 void pgpe_process_stop_beacon();
 
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif

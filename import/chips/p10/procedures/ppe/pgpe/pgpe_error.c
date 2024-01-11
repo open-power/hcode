@@ -30,7 +30,9 @@
 #include "p10_oci_proc_6.H"
 #include "pgpe_avsbus_driver.h"
 
-extern  uint64_t  g_oimr_override;
+#ifdef __PPE_PGPE
+    extern  uint64_t  g_oimr_override;
+#endif
 extern pgpe_avsbus_t G_pgpe_avsbus __attribute__((section (".data_structs")));
 
 pgpe_error_code_t G_PGPE_ERROR_CODES[] =
@@ -809,6 +811,7 @@ pgpe_error_t G_pgpe_error;
 
 void pgpe_error_init()
 {
+#ifdef __PPE_PGPE
     G_pgpe_error.current_status = PGPE_ERROR_STATUS_NOT_SEEN;
     G_pgpe_error.critical_cnt = 0;
     G_pgpe_error.info_cnt = 0;
@@ -817,10 +820,12 @@ void pgpe_error_init()
     G_pgpe_error.first_crit_err_idx = 0;
     G_pgpe_error.last_crit_err_idx = 0;
     IOTA_MC_HANDLER(pgpe_error_machine_check_handler);
+#endif
 }
 
 void pgpe_error_info_log(uint32_t pgpe_err_id)
 {
+#ifdef __PPE_PGPE
     //Create Info Error Log
     uint32_t o_status;
     PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
@@ -832,10 +837,12 @@ void pgpe_error_info_log(uint32_t pgpe_err_id)
                     NULL,
                     o_status );
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status); //TODO Check error code
+#endif
 }
 
 void pgpe_error_info_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3)
 {
+#ifdef __PPE_PGPE
     uint32_t o_status;
     PPE_LOG_ERR_INF(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                     G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
@@ -846,11 +853,13 @@ void pgpe_error_info_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32
                     NULL,
                     o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
+#endif
 }
 
 
 void pgpe_error_critical_log(uint32_t pgpe_err_id)
 {
+#ifdef __PPE_PGPE
     //Create Critical Log
     uint32_t o_status;
     uint32_t usr_data1 = 0;
@@ -874,10 +883,12 @@ void pgpe_error_critical_log(uint32_t pgpe_err_id)
                          NULL,
                          o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
+#endif
 }
 
 void pgpe_error_critical_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, uint32_t usrdata2, uint32_t usrdata3)
 {
+#ifdef __PPE_PGPE
     uint32_t o_status;
     PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
@@ -889,11 +900,13 @@ void pgpe_error_critical_log_usrdata(uint32_t pgpe_err_id, uint32_t usrdata1, ui
                          NULL,
                          o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
+#endif
 }
 
 
 void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dtls)
 {
+#ifdef __PPE_PGPE
     //Create Critical Log
     uint32_t o_status;
     PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
@@ -906,11 +919,13 @@ void pgpe_error_critical_log_usr(uint32_t pgpe_err_id, errlDataUsrDtls_t* usr_dt
                          NULL,
                          o_status);
     PK_TRACE_INF("ERRL: o_status=0x%x", o_status);//TODO Check error code
+#endif
 }
 
 
 void pgpe_error_notify_critical(uint32_t pgpe_err_id)
 {
+#ifdef __PPE_PGPE
     G_pgpe_error.critical_cnt++;
 
     if(!(G_pgpe_error.current_status & PGPE_ERROR_STATUS_CRITICAL_SEEN))
@@ -922,10 +937,12 @@ void pgpe_error_notify_critical(uint32_t pgpe_err_id)
 
     G_pgpe_error.current_status |= PGPE_ERROR_STATUS_CRITICAL_SEEN;
     PK_TRACE("ERR: Notify Critical");
+#endif
 }
 
 void pgpe_error_notify_info(uint32_t pgpe_err_id)
 {
+#ifdef __PPE_PGPE
     G_pgpe_error.info_cnt++;
 
     if(G_pgpe_error.current_status  & PGPE_ERROR_STATUS_INFO_SEEN)
@@ -936,6 +953,7 @@ void pgpe_error_notify_info(uint32_t pgpe_err_id)
     G_pgpe_error.last_info_err_idx = pgpe_err_id;
 
     G_pgpe_error.current_status |= PGPE_ERROR_STATUS_INFO_SEEN;
+#endif
 }
 
 
@@ -947,6 +965,7 @@ void pgpe_error_stop_beacon()
 
 void pgpe_error_mask_irqs()
 {
+#ifdef __PPE_PGPE
     uint32_t oimr0 = 0x400EE020; //Except IPC and GPE3_ERROR, XSTOP_GPE2, and PVREF error
     g_oimr_override |= BIT64(2) |
                        BIT64(12) | BIT64(13) | BIT64(14) |
@@ -954,10 +973,12 @@ void pgpe_error_mask_irqs()
                        BIT64(26);
     out32(TP_TPCHIP_OCC_OCI_OCB_OIMR0_WO_OR, oimr0);
     PK_TRACE("ERR: IRQs Masked");
+#endif
 }
 
 void pgpe_error_ack_pending()
 {
+#ifdef __PPE_PGPE
     event_t* e = pgpe_event_tbl_get(EV_IPC_PSTATE_START_STOP);
 
     //Start Stop
@@ -1013,11 +1034,13 @@ void pgpe_error_ack_pending()
     }
 
     PK_TRACE("ERR: Pending IPC Acked");
+#endif
 }
 
 
 void pgpe_error_handle_fault(uint32_t pgpe_err_id)
 {
+#ifdef __PPE_PGPE
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
 
@@ -1032,10 +1055,12 @@ void pgpe_error_handle_fault(uint32_t pgpe_err_id)
 
     //ack any pending IPCS with bad rc
     pgpe_error_ack_pending();
+#endif
 }
 
 void pgpe_error_handle_fault_w_safe_mode(uint32_t pgpe_err_id)
 {
+#ifdef __PPE_PGPE
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
 
@@ -1053,10 +1078,12 @@ void pgpe_error_handle_fault_w_safe_mode(uint32_t pgpe_err_id)
 
     //ack any pending IPCS with bad rc
     pgpe_error_ack_pending();
+#endif
 }
 
 void pgpe_error_handle_fault_usr_data(uint32_t pgpe_err_id, uint32_t data1, uint32_t data2, uint32_t data3)
 {
+#ifdef __PPE_PGPE
     //Mask interrupt except IPC and Error
     pgpe_error_mask_irqs();
 
@@ -1071,10 +1098,12 @@ void pgpe_error_handle_fault_usr_data(uint32_t pgpe_err_id, uint32_t data1, uint
 
     //ack any pending IPCS with bad rc
     pgpe_error_ack_pending();
+#endif
 }
 
 void pgpe_error_machine_check_handler()
 {
+#ifdef __PPE_PGPE
     uint32_t srr0  = mfspr(SPRN_SRR0);
     uint32_t srr1  = mfspr(SPRN_SRR1);
     uint32_t edr   = mfspr(SPRN_EDR);
@@ -1104,7 +1133,7 @@ void pgpe_error_machine_check_handler()
 
     //Ack any pending IPCS with bad rc
     pgpe_error_ack_pending();
-
+#endif
 }
 
 void pgpe_error_state_loop()

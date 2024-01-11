@@ -56,7 +56,6 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.wov_uv_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_ov_status = WOV_STATUS_DISABLED;
     G_pgpe_wov_ocs.ocs_status = OCS_STATUS_DISABLED;
-    G_pgpe_wov_ocs.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_pgpe_pgpeWofStateAddress));
     G_pgpe_wov_ocs.wov_thr_loss_enable = WOV_THR_LOSS_STATUS_DISABLED;
     G_pgpe_wov_ocs.wov_freq_loss_enable = WOV_FREQ_LOSS_STATUS_DISABLED;
     G_pgpe_wov_ocs.droop_level = DROOP_LVL_OK;
@@ -64,8 +63,6 @@ void pgpe_wov_ocs_init()
     G_pgpe_wov_ocs.curr_pct = 0;
     G_pgpe_wov_ocs.tgt_pct = 0;
     G_pgpe_wov_ocs.hysteresis_cnt = 0;
-    G_pgpe_wov_ocs.idd_current_thresh = pgpe_gppb_get_wov_idd_thresh() * 10;
-
     G_pgpe_wov_ocs.overcurrent_flag = OCS_UNDER_THRESH;
     G_pgpe_wov_ocs.cnt_droop_ok = 0;
     G_pgpe_wov_ocs.cnt_droop_ok_oc = 0;
@@ -80,8 +77,15 @@ void pgpe_wov_ocs_init()
 
     G_overv_max_cnt_log = 0;
 
+#ifdef __PPE_PGPE
+
+    G_pgpe_wov_ocs.idd_current_thresh = pgpe_gppb_get_wov_idd_thresh() * 10;
+
     //Store rdp_limit_10ma value in occ sram space
+    G_pgpe_wov_ocs.pwof_val = (pgpe_wof_values_t*)(pgpe_header_get(g_pgpe_pgpeWofStateAddress));
     G_pgpe_wov_ocs.pwof_val->dw1.fields.rdp_limit_10ma = G_pgpe_wov_ocs.idd_current_thresh;
+
+#endif
 
     uint32_t ecomask;
     ecomask = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG6_RW);
@@ -98,14 +102,15 @@ void pgpe_wov_ocs_init()
 
     G_pgpe_wov_ocs.eco_ttsr_mask = ~G_pgpe_wov_ocs.eco_ttsr_mask;
     PK_TRACE_INF("WOV: ECO TTSR Mask 0x%llX",  G_pgpe_wov_ocs.eco_ttsr_mask);
-
-    /*PK_TRACE_DBG("WOV: overv_max_pct  = 0x%x", pgpe_gppb_get_wov_overv_max_pct());
-    PK_TRACE_DBG("WOV: underv_max_pct = 0x%x", pgpe_gppb_get_wov_underv_max_pct());
-
-    PK_TRACE_DBG("WOV: WOV_DIRTY_UC_CTRL_LIGHT_DROOP=%u",
-             pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP));
-    PK_TRACE_DBG("WOV: WOV_DIRTY_UC_CTRL_HEAVY_DROOP=%u",
-             pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP));*/
+    PK_TRACE_INF("WOV: overv_max_10thpct            = %u", pgpe_gppb_get_wov_overv_max_pct());
+    PK_TRACE_INF("WOV: underv_max_10thpct           = %u", pgpe_gppb_get_wov_underv_max_pct());
+    PK_TRACE_INF("WOV: underv_extended_max_10thpct  = %u", pgpe_gppb_get_wov_underv_extended_max_pct());
+    PK_TRACE_INF("WOV: tgt_10thpct                  = %u", pgpe_wov_ocs_get_wov_tgt_pct());
+    PK_TRACE_INF("WOV: curr_10thpct                 = %u", pgpe_wov_ocs_get_wov_curr_pct());
+    PK_TRACE_INF("WOV: WOV_DIRTY_UC_CTRL_LIGHT_DROOP=%u",
+                 pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP));
+    PK_TRACE_INF("WOV: WOV_DIRTY_UC_CTRL_HEAVY_DROOP=%u",
+                 pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP));
     PK_TRACE_INF("WOV: Inited");
 }
 
@@ -152,7 +157,7 @@ void pgpe_wov_ocs_disable()
 
 uint32_t pgpe_wov_ocs_determine_perf_loss()
 {
-    //PK_TRACE("OCS: Perf loss");
+    //PK_TRACE_INF("OCS: Perf loss");
 
     uint64_t thr_light_loss = 0;
     uint64_t thr_heavy_loss = 0;
@@ -170,7 +175,6 @@ uint32_t pgpe_wov_ocs_determine_perf_loss()
         || (G_pgpe_wov_ocs.wov_ov_status & WOV_STATUS_ENABLED))
     {
 
-
         if(G_pgpe_wov_ocs.wov_thr_loss_enable == WOV_THR_LOSS_STATUS_ENABLED)
         {
             //Read TTSR
@@ -180,7 +184,10 @@ uint32_t pgpe_wov_ocs_determine_perf_loss()
             ttsr_masked = ttsr & G_pgpe_wov_ocs.eco_ttsr_mask;
             thr_light_loss = ttsr_masked & 0XF0F0F0F0F0F0F0F0;
             thr_heavy_loss = ttsr_masked & 0X0F0F0F0F0F0F0F0F;
-            //PK_TRACE("OCS: light_loss=0x%x, heavy_loss=0x%x, ttsr=0x%08x%08x",thr_light_loss,thr_heavy_loss, (ttsr>>32)&0xFFFFFFFF,ttsr&0xFFFFFFFF);
+#ifndef __PPE_PGPE
+            PK_TRACE_INF("OCS: light_loss=0x%x, heavy_loss=0x%x, ttsr=0x%08x%08x", thr_light_loss, thr_heavy_loss,
+                         ((ttsr >> 32) & 0xFFFFFFFF), (ttsr & 0xFFFFFFFF));
+#endif
 
             if (ttsr)
             {
@@ -221,7 +228,6 @@ uint32_t pgpe_wov_ocs_determine_perf_loss()
         {
             G_pgpe_wov_ocs.chip_idle = 0;
         }
-
     }
 
     return 0;
@@ -250,45 +256,52 @@ void pgpe_wov_ocs_update_dirty()
         droop = DROOP_LVL_OK;
     }
 
+    //Trace if change in droop level
+    if (G_pgpe_wov_ocs.droop_level != droop)
+    {
+#ifdef __PPE_PGPE
+        pgpe_opt_set_word(0, 0);
+        pgpe_opt_set_byte(0, droop);
+        ppe_trace_op(PGPE_OPT_OCS_DROOP_COND, pgpe_opt_get());
+#endif
+#ifndef __PPE_PGPE
+        PK_TRACE_INF("WOV: old_droop_lvl=0x%x, new_droop_lvl=0x%x", G_pgpe_wov_ocs.droop_level, droop);
+#endif
+        G_pgpe_wov_ocs.droop_level = droop;
+    }
+
+    overcurrent = OCS_UNDER_THRESH;
+#ifdef __PPE_PGPE
+
     //Check for overrcurrent status
     if(pgpe_occ_get(idd_ocs_running_avg) >= G_pgpe_wov_ocs.idd_current_thresh)
     {
         overcurrent = OCS_OVER_THRESH;
     }
-    else
-    {
-        overcurrent = OCS_UNDER_THRESH;
-    }
-
-    //Trace if change in droop level
-    if (G_pgpe_wov_ocs.droop_level != droop)
-    {
-        pgpe_opt_set_word(0, 0);
-        pgpe_opt_set_byte(0, droop);
-        ppe_trace_op(PGPE_OPT_OCS_DROOP_COND, pgpe_opt_get());
-        PK_TRACE_DBG("WOV: old_droop_lvl=0x%x, new_droop_lvl=0x%x", G_pgpe_wov_ocs.droop_level, droop);
-    }
 
     //Trace if change in overcurrent status
     if (G_pgpe_wov_ocs.overcurrent_flag != overcurrent)
     {
+
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_half(0, G_pgpe_wov_ocs.idd_current_thresh);
         pgpe_opt_set_half(1, pgpe_occ_get(idd_ocs_running_avg) - G_pgpe_wov_ocs.idd_current_thresh);
         ppe_trace_op(PGPE_OPT_OCS_THRESH_TRANS, pgpe_opt_get());
+
         PK_TRACE_DBG("WOV: old_ocs=0x%x, new_ocs=0x%x idd_avg_ma=0x%x, idd_thresh=0x%x", G_pgpe_wov_ocs.overcurrent_flag,
                      overcurrent,
                      G_pgpe_wov_ocs.pwof_val->dw1.fields.idd_avg_10ma,
                      G_pgpe_wov_ocs.idd_current_thresh);
     }
 
-    G_pgpe_wov_ocs.droop_level = droop;
     G_pgpe_wov_ocs.overcurrent_flag = overcurrent;
+#endif
 
     if (droop == DROOP_LVL_OK)
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+#ifdef __PPE_PGPE
             //Update current running avg value to occ sram space
             G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
             G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
@@ -297,6 +310,7 @@ void pgpe_wov_ocs_update_dirty()
             //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
             //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
             G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
+#endif
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
@@ -305,11 +319,15 @@ void pgpe_wov_ocs_update_dirty()
             //Update instrumentation counters
             G_pgpe_wov_ocs.cnt_droop_ok_oc++;
 
+#ifdef __PPE_PGPE
+
             if ( G_pgpe_wov_ocs.dirty_cnt < G_pgpe_wov_ocs.dirty_log_thresh)
             {
                 pgpe_error_notify_info(PGPE_ERR_EXT_CODE_PGPE_WOV_DIRTY_HALT_OKTH);
                 G_pgpe_wov_ocs.dirty_cnt++;
             }
+
+#endif
         }
         else
         {
@@ -337,8 +355,10 @@ void pgpe_wov_ocs_update_dirty()
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+#ifdef __PPE_PGPE
             //Update current running avg value to occ sram space
             G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
+#endif
             G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
@@ -350,12 +370,15 @@ void pgpe_wov_ocs_update_dirty()
 
             G_pgpe_wov_ocs.dirty_cnt++;
 
+#ifdef __PPE_PGPE
+
             if ( G_pgpe_wov_ocs.dirty_log_cnt < G_pgpe_wov_ocs.dirty_log_thresh)
             {
                 pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OCSTH);
                 G_pgpe_wov_ocs.dirty_log_cnt++;
             }
 
+#endif
             //Buffer trace \\todo
         }
         else
@@ -375,18 +398,23 @@ void pgpe_wov_ocs_update_dirty()
             }
             else if  (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_LIGHT_DROOP) == 3)
             {
+#ifdef __PPE_PGPE
                 //Update current running avg value to occ sram space
                 G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
+
                 //Use pstate_next because either the FIT will occur in the middle of actuate step or outside. In case,
                 //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
                 //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
                 G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
+#endif
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
                 dirty = OCS_DIRTY_SAMPLE_TYPE_11;
 
                 G_pgpe_wov_ocs.dirty_cnt++;
+
+#ifdef __PPE_PGPE
 
                 if ( G_pgpe_wov_ocs.dirty_log_cnt < G_pgpe_wov_ocs.dirty_log_thresh)
                 {
@@ -394,6 +422,7 @@ void pgpe_wov_ocs_update_dirty()
                     G_pgpe_wov_ocs.dirty_log_cnt++;
                 }
 
+#endif
             }
 
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
@@ -408,9 +437,10 @@ void pgpe_wov_ocs_update_dirty()
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+#ifdef __PPE_PGPE
             //Update current running avg value to occ sram space
             G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
-
+#endif
             G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
@@ -421,12 +451,15 @@ void pgpe_wov_ocs_update_dirty()
 
             G_pgpe_wov_ocs.dirty_cnt++;
 
+#ifdef __PPE_PGPE
+
             if ( G_pgpe_wov_ocs.dirty_log_cnt < G_pgpe_wov_ocs.dirty_log_thresh)
             {
                 pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_HOC);
                 G_pgpe_wov_ocs.dirty_log_cnt++;
             }
 
+#endif
             //Buffer trace \\todo
         }
         else
@@ -446,24 +479,31 @@ void pgpe_wov_ocs_update_dirty()
             }
             else if (pgpe_gppb_get_wov_dirty_undercurr_control(WOV_DIRTY_UC_CTRL_HEAVY_DROOP) == 3)
             {
+#ifdef __PPE_PGPE
                 //Update current running avg value to occ sram space
                 G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
                 G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
+
                 //Use pstate_next because either the FIT will occur in the middle of actuate step or outside. In case,
                 //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
                 //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
                 G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
+#endif
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
                 out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
                 dirty = OCS_DIRTY_SAMPLE_TYPE_11;
 
                 G_pgpe_wov_ocs.dirty_cnt++;
 
+#ifdef __PPE_PGPE
+
                 if ( G_pgpe_wov_ocs.dirty_log_cnt < G_pgpe_wov_ocs.dirty_log_thresh)
                 {
                     pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_HUC);
                     G_pgpe_wov_ocs.dirty_log_cnt++;
                 }
+
+#endif
             }
 
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
@@ -479,6 +519,7 @@ void pgpe_wov_ocs_update_dirty()
     {
         if (overcurrent == OCS_OVER_THRESH)
         {
+#ifdef __PPE_PGPE
             //Update current running avg value to occ sram space
             G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = pgpe_occ_get(idd_ocs_running_avg);
             G_pgpe_wov_ocs.pwof_val->dw5.fields.dirty_ttsr = G_pgpe_wov_ocs.ttsr_masked;
@@ -487,6 +528,7 @@ void pgpe_wov_ocs_update_dirty()
             //it happens in the middle of actuate step, then pstate_next and pstate_curr may not be equal for a little bit and pstate_next
             //represents pstate actuated to. In case, FIT occurs outside actuate step, then pstate_next == pstate_curr
             G_pgpe_wov_ocs.pwof_val->dw2.fields.dirty_pstate_inst = pgpe_pstate_get(pstate_next);
+#endif
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
             out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
             G_pgpe_wov_ocs.hysteresis_cnt = HYSTERESIS_TICKS;
@@ -496,12 +538,15 @@ void pgpe_wov_ocs_update_dirty()
 
             G_pgpe_wov_ocs.dirty_cnt++;
 
+#ifdef __PPE_PGPE
+
             if ( G_pgpe_wov_ocs.dirty_log_cnt < G_pgpe_wov_ocs.dirty_log_thresh)
             {
                 pgpe_error_notify_info(PGPE_ERR_CODE_PGPE_WOV_DIRTY_HALT_OCSTH);
                 G_pgpe_wov_ocs.dirty_log_cnt++;
             }
 
+#endif
             //Buffer trace \\todo
         }
         else
@@ -541,15 +586,20 @@ void pgpe_wov_ocs_update_dirty()
         G_overv_max_cnt_log = 1;
     }
 
+
     if (G_pgpe_wov_ocs.dirty != dirty)
     {
+#ifdef __PPE_PGPE
         pgpe_opt_set_word(0, 0);
         pgpe_opt_set_byte(0, dirty);
-        ppe_trace_op(PGPE_OPT_OCS_DIRTY_TYPE , pgpe_opt_get());
+        ppe_trace_op(PGPE_OPT_OCS_DIRTY_TYPE, pgpe_opt_get());
+#endif
         PK_TRACE_DBG("WOV: new_dirty=0x%x, old_dirty=0x%x", dirty, G_pgpe_wov_ocs.dirty);
     }
 
     G_pgpe_wov_ocs.dirty = dirty;
+
+#ifdef __PPE_PGPE
 
     if(pgpe_pstate_get(vdd_wov_bias) > 0)
     {
@@ -559,6 +609,8 @@ void pgpe_wov_ocs_update_dirty()
     {
         G_pgpe_wov_ocs.cnt_wov_uv_ticks++;
     }
+
+#endif
 
     G_pgpe_wov_ocs.cnt_wov_total_ticks++;
 }
@@ -570,7 +622,14 @@ void pgpe_wov_ocs_dec_tgt_pct()
 
     if (pgpe_wov_ocs_is_wov_underv_enabled())
     {
-        min_pct = -pgpe_gppb_get_wov_underv_max_pct();
+        if (pgpe_gppb_get_wov_underv_extended_max_pct())
+        {
+            min_pct = -pgpe_gppb_get_wov_underv_extended_max_pct();
+        }
+        else
+        {
+            min_pct = -pgpe_gppb_get_wov_underv_max_pct();
+        }
     }
     else
     {

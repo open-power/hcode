@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -25,12 +25,16 @@
 #ifndef __PGPE_PSTATE_H__
 #define __PGPE_PSTATE_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __PARSER_TOOL__
 
-    #include "pgpe.h"
+#include "pgpe.h"
 
 #else
-    #define MAX_CORES  32
+#define MAX_CORES  32
 #endif
 
 #define PMCR_PMSR_VERSION_3 3
@@ -184,5 +188,8 @@ uint32_t pgpe_pstate_freq_from_ps(uint32_t ps);
 uint32_t pgpe_pstate_ps_from_freq(uint32_t freq_khz);
 uint32_t pgpe_pstate_ps_from_freq_clipped(uint32_t freq_khz, uint32_t round_up);
 
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif
