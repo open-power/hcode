@@ -5,7 +5,7 @@
 <!--                                                                        -->
 <!-- OpenPOWER EKB Project                                                  -->
 <!--                                                                        -->
-<!-- COPYRIGHT 2015,2021                                                    -->
+<!-- COPYRIGHT 2015,2024                                                    -->
 <!-- [+] International Business Machines Corp.                              -->
 <!--                                                                        -->
 <!--                                                                        -->
@@ -24,6 +24,7 @@
 <!-- IBM_PROLOG_END_TAG                                                     -->
 <hwpErrors>
   <hwpError>
+    <sbeError/>
     <rc>RC_SCAN_VIA_SCOM_TIMEOUT</rc>
     <description>A long rotate operation did not complete within 100ms</description>
     <ffdc>TARGET</ffdc>
