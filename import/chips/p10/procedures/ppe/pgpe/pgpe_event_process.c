@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -206,11 +206,11 @@ void pgpe_process_pstate_start()
     //4. Read the external VDD and VCS
     pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
                              pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                             &voltage);
+                             &voltage, RUNTIME_RAIL_VDD);
     pgpe_pstate_set(vdd_curr_ext, voltage);
     pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
                              pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                             &voltage);
+                             &voltage, RUNTIME_RAIL_VCS);
     pgpe_pstate_set(vcs_curr_ext, voltage);
 
     PK_TRACE_INF("PEP: Read vdd=%u vcs=%u", pgpe_pstate_get(vdd_curr_ext), pgpe_pstate_get(vcs_curr_ext));

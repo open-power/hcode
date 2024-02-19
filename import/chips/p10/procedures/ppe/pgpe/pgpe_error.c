@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021,2023                                                    */
+/* COPYRIGHT 2021,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -28,8 +28,10 @@
 #include "pgpe_error_codes.h"
 #include "pgpe_occ.h"
 #include "p10_oci_proc_6.H"
+#include "pgpe_avsbus_driver.h"
 
 extern  uint64_t  g_oimr_override;
+extern pgpe_avsbus_t G_pgpe_avsbus __attribute__((section (".data_structs")));
 
 pgpe_error_code_t G_PGPE_ERROR_CODES[] =
 {
@@ -851,12 +853,23 @@ void pgpe_error_critical_log(uint32_t pgpe_err_id)
 {
     //Create Critical Log
     uint32_t o_status;
+    uint32_t usr_data1 = 0;
+    uint32_t usr_data2 = 0;
+    uint32_t usr_data3 = 0;
+
+    if ( G_PGPE_ERROR_CODES[pgpe_err_id].mod_id == PGPE_ERR_MODULE_AVSBUS_DRIVER)
+    {
+        usr_data1 = G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.value;
+        usr_data2 = G_pgpe_avsbus.avs_bus_ffdc.cmd_data;
+        usr_data3 = G_pgpe_avsbus.avs_bus_ffdc.scale_idx;
+    }
+
     PPE_LOG_ERR_CRITICAL(G_PGPE_ERROR_CODES[pgpe_err_id].reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].ext_reason_code,
                          G_PGPE_ERROR_CODES[pgpe_err_id].mod_id,
-                         0x0,
-                         0x0,
-                         0x0,
+                         usr_data1,
+                         usr_data2,
+                         usr_data3,
                          NULL,
                          NULL,
                          o_status);

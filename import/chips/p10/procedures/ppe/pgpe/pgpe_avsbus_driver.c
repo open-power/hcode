@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -646,7 +646,11 @@ void pgpe_avsbus_init_bus(uint32_t bus_num)
 
     if (rc)
     {
-        PK_TRACE_ERR("AVS: Init Bus, DriveIdleFrame FAIL");
+        PK_TRACE_ERR("AVS: Init Bus, bus_num %u DriveIdleFrame FAIL", bus_num);
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_bnum = bus_num;
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_rnum = 0;
+        G_pgpe_avsbus.avs_bus_ffdc.cmd_data = 0;
+        G_pgpe_avsbus.avs_bus_ffdc.scale_idx = 0;
         pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_INIT_ERR);
         pgpe_error_state_loop();
     }
@@ -669,6 +673,11 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
 
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
+
+    G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_bnum = bus_num;
+    G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_rnum = rail_num;
+    G_pgpe_avsbus.avs_bus_ffdc.cmd_data = volt_mv;
+    G_pgpe_avsbus.avs_bus_ffdc.scale_idx = rail;
 
     if (bus_num != 0xFF)
     {
@@ -705,31 +714,36 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS: Volt_W Flag Timeout");
+                PK_TRACE_ERR("AVS: Volt_W  bus_num %u rail_num %u Flag Timeout",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_NO_ACTION:
-                PK_TRACE_ERR("AVS: Volt_W, Good CRC, but no action");
+                PK_TRACE_ERR("AVS: Volt_W, bus_num %u rail_num %u Good CRC, but no action",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS: Volt_W Resync Error");
+                PK_TRACE_ERR("AVS: Volt_W, bus_num %u rail_num %u Resync Error",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
-                PK_TRACE_ERR("AVS: Volt_W, Not in PGPE Control");
+                PK_TRACE_ERR("AVS: Volt_W, bus_num %u rail_num %u Not in PGPE Control",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_NOT_IN_PGPE_CONTROL);
                 pgpe_error_state_loop();
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Volt_W, Unknown Error");
+                PK_TRACE_ERR("AVS: Volt_W, bus_num %u rail_num %u Unknown Error rc %u",
+                             bus_num, rail_num, rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;
@@ -738,7 +752,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
         // Poll for Vdone with timeout
         do
         {
-            pgpe_avsbus_status_read( bus_num, rail_num, &ret_status);
+            pgpe_avsbus_status_read( bus_num, rail_num, &ret_status, rail, AVS_CMD_VOLTAGE_RW);
 
             // Check for Vdone being set to indicate the transition has completed
             //
@@ -759,6 +773,10 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
             {
                 if ( vdone_timeout_delta_tb > G_pgpe_avsbus.delta_tb[rail] )
                 {
+                    G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_bnum = bus_num;
+                    G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_rnum = rail_num;
+                    G_pgpe_avsbus.avs_bus_ffdc.cmd_data = vdone_timeout_delta_tb;
+                    G_pgpe_avsbus.avs_bus_ffdc.scale_idx = rail;
                     PK_TRACE_INF("AVS: Volt_W Timeout:  retries %d", vdone_retry_cnt);
                     PK_TRACE_INF("AVS: Volt_W Timeout:  actual %d threshold %d", vdone_timeout_delta_tb, G_pgpe_avsbus.delta_tb[rail]);
                     rc = AVS_RC_VDONE_TIMEOUT;
@@ -781,7 +799,7 @@ void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t vol
     pk_critical_section_exit(&ctx);
 }
 
-void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_volt)
+void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_volt, uint32_t rail)
 {
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
@@ -793,6 +811,11 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         rc = pgpe_avsbus_drive_read(AVS_CMD_VOLTAGE_RW, &cmd_data, bus_num, rail_num);
 
         *ret_volt = (cmd_data >> 8) & 0x0000FFFF;
+
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_bnum = bus_num;
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_rnum = rail_num;
+        G_pgpe_avsbus.avs_bus_ffdc.cmd_data = cmd_data;
+        G_pgpe_avsbus.avs_bus_ffdc.scale_idx = rail;
         PK_TRACE_INF("AVS: Volt_R, ret_volt %u rc = %u", *ret_volt, rc);
 
         switch (rc)
@@ -810,31 +833,36 @@ void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS: Volt_R, OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Volt_R, bus_num %u rail_num %u OnGoing Flag Timeout",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_NO_ACTION:
-                PK_TRACE_ERR("AVS: Volt_R, OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Volt_R, bus_num %u rail_num %u  Good CRC, but no action",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS: Volt_R, Resync Error");
+                PK_TRACE_ERR("AVS: Volt_R, bus_num %u rail_num %u Resync Error",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
-                PK_TRACE_ERR("AVS: Volt_R, Not in PGPE Control");
+                PK_TRACE_ERR("AVS: Volt_R, bus_num %u rail_num %u Not in PGPE Control",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_NOT_IN_PGPE_CONTROL);
                 pgpe_error_state_loop();
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Volt_R, Unknown Error rc = %u", rc);
+                PK_TRACE_ERR("AVS: Volt_R, bus_num %u rail_num %u Unknown Error rc = %u",
+                             bus_num, rail_num, rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_VOLTAGE_READ_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;
@@ -866,6 +894,11 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
         rc = pgpe_avsbus_drive_read(AVS_CMD_CURRENT_READ, &cmd_data, bus_num, rail_num);
 
         *ret_current = (cmd_data >> 8) & 0x0000FFFF;
+
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.cur_bnum = bus_num;
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.cur_rnum = rail_num;
+        G_pgpe_avsbus.avs_bus_ffdc.cmd_data = cmd_data;
+        G_pgpe_avsbus.avs_bus_ffdc.scale_idx = current_scale_idx;
         PK_TRACE_DBG("AVS: Curr_R, raw ret_current %u rc = %u", *ret_current, rc);
 
         switch (rc)
@@ -907,7 +940,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                 {
                     G_pgpe_avsbus.total_current_read_alert_cnt++;
 
-                    pgpe_avsbus_status_read(bus_num, rail_num, &avs_status);
+                    pgpe_avsbus_status_read(bus_num, rail_num, &avs_status, current_scale_idx, AVS_CMD_CURRENT_READ);
 
                     PK_TRACE_DBG("AVS: Curr_R, Status Alert; status read: 0x%04X current %u ocw_mode %u ",
                                  avs_status, *ret_current, G_pgpe_avsbus.ocw_mode);
@@ -921,7 +954,8 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
                         // Clear the OCW bit to arm the VRM to notify upon the next upward OCW crossing
                         uint32_t status_clear_status = 0;
-                        pgpe_avsbus_status_write(bus_num, rail_num, (uint32_t)(AVS_STAT_VDONE | AVS_STAT_OCW), &status_clear_status);
+                        pgpe_avsbus_status_write(bus_num, rail_num, (uint32_t)(AVS_STAT_VDONE | AVS_STAT_OCW), &status_clear_status,
+                                                 current_scale_idx);
                         PK_TRACE_INF("AVS: Curr_R, Entering OCW mode. Clear VDone and OCW bus %u rail %u status 0x%08X", bus_num, rail_num,
                                      status_clear_status );
                     }
@@ -1024,25 +1058,29 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS: Curr_R, OnGoing Flag Timeout Error");
+                PK_TRACE_ERR("AVS: Curr_R (IDX %u), bus_num %u rail_num %u OnGoing Flag Timeout Error",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS: Curr_R, Resync Error");
+                PK_TRACE_ERR("AVS: Curr_R (IDX %u), bus_num %u rail_num %u  Resync Error",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
-                PK_TRACE_ERR("AVS: Curr_R, Not In PGPE Control");
+                PK_TRACE_ERR("AVS: Curr_R (IDX %u), bus_num %u rail_num %u  Not In PGPE Control",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_NOT_IN_PGPE_CONTROL);
                 pgpe_error_state_loop();
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Curr_R, Unknown Error rc = %u", rc);
+                PK_TRACE_ERR("AVS: Curr_R (IDX %u), bus_num %u rail_num %u Unknown Error rc = %u",
+                             current_scale_idx, bus_num, rail_num, rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_CURRENT_READ_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;
@@ -1059,7 +1097,8 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     pk_critical_section_exit(&ctx);
 }
 
-void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask, uint32_t* ret_status)
+void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask,
+                              uint32_t* ret_status, uint32_t current_scale_idx)
 {
     PkMachineContext ctx;
     pk_critical_section_enter(&ctx);
@@ -1069,6 +1108,11 @@ void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clea
     {
         rc = pgpe_avsbus_drive_write(AVS_CMD_STATUS_RW, clear_mask, 0, bus_num, rail_num, ret_status);
 
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.cur_bnum = bus_num;
+        G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.cur_rnum = rail_num;
+        G_pgpe_avsbus.avs_bus_ffdc.cmd_data = *ret_status;
+        G_pgpe_avsbus.avs_bus_ffdc.scale_idx = current_scale_idx;
+
         switch (rc)
         {
             case AVS_RC_SUCCESS:
@@ -1076,31 +1120,36 @@ void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clea
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS: Stat_W, OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Stat_W (IDX %u), bus_num %u rail_num %u OnGoing Flag Timeout",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_NO_ACTION:
-                PK_TRACE_ERR("AVS: Stat_W, OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Stat_W (IDX %u), bus_num %u rail_num %u Good CRC, but no action",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_VOLTAGE_WRITE_GOOD_CRC_NO_ACTION);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS: Stat_W, Resync Error");
+                PK_TRACE_ERR("AVS: Stat_W (IDX %u), bus_num %u rail_num %u Resync Error",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
-                PK_TRACE_ERR("AVS: Stat_W, Not in PGPE Control");
+                PK_TRACE_ERR("AVS: Stat_W (IDX %u), bus_num %u rail_num %u Not in PGPE Control",
+                             current_scale_idx, bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_NOT_IN_PGPE_CONTROL);
                 pgpe_error_state_loop();
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Stat_W, Unknown Error");
+                PK_TRACE_ERR("AVS: Stat_W (IDX %u), bus_num %u rail_num %u Unknown Error rc %u",
+                             current_scale_idx, bus_num, rail_num, rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_WRITE_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;
@@ -1116,7 +1165,8 @@ void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clea
 }
 
 // Note: this is called by routine already in protected context
-void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status)
+void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status, uint32_t rail,
+                             uint32_t i_cmd_type)
 {
     uint32_t rc = 0;
     uint32_t cmd_data = 0;
@@ -1126,6 +1176,20 @@ void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_
         rc = pgpe_avsbus_drive_read(AVS_CMD_STATUS_RW, &cmd_data, bus_num, rail_num);
 
         *ret_status = (cmd_data >> 8) & 0x0000FFFF;
+
+        if ( i_cmd_type == AVS_CMD_CURRENT_READ)
+        {
+            G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.cur_bnum = bus_num;
+            G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.cur_rnum = rail_num;
+        }
+        else
+        {
+            G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_bnum = bus_num;
+            G_pgpe_avsbus.avs_bus_ffdc.avs_b_r_dtls.fields.vlt_rnum = rail_num;
+        }
+
+        G_pgpe_avsbus.avs_bus_ffdc.cmd_data = cmd_data;
+        G_pgpe_avsbus.avs_bus_ffdc.scale_idx = rail;
         PK_TRACE_DBG("AVS: Stat_R, ret_status 0x%08X rc = %u", *ret_status, rc);
 
         switch (rc)
@@ -1135,31 +1199,36 @@ void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_
                 break;
 
             case AVS_RC_ONGOING_TIMEOUT:
-                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Stat_R, bus_num %u rail_num %u OnGoing Flag Timeout",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_ONGOING_TIMEOUT);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_NO_ACTION:
-                PK_TRACE_ERR("AVS: Stat_R, OnGoing Flag Timeout");
+                PK_TRACE_ERR("AVS: Stat_R, bus_num %u rail_num %u Good CRC, but no action",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault_w_safe_mode(PGPE_ERR_CODE_AVSBUS_STATUS_READ_GOOD_CRC_NO_ACTION);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_RESYNC_ERROR:
-                PK_TRACE_ERR("AVS: Stat_R, Resync Error");
+                PK_TRACE_ERR("AVS: Stat_R, bus_num %u rail_num %u Resync Error",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_RESYNC_ERROR);
                 pgpe_error_state_loop();
                 break;
 
             case AVS_RC_AVSBUS_NOT_IN_PGPE_CONTROL:
-                PK_TRACE_ERR("AVS: Stat_R, Not in PGPE Control");
+                PK_TRACE_ERR("AVS: Stat_R, bus_num %u rail_num %u Not in PGPE Control",
+                             bus_num, rail_num);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_NOT_IN_PGPE_CONTROL);
                 pgpe_error_state_loop();
                 break;
 
             default:
-                PK_TRACE_ERR("AVS: Stat_R, Unknown Error");
+                PK_TRACE_ERR("AVS: Stat_R, bus_num %u rail_num %u Unknown Error rc %u",
+                             bus_num, rail_num, rc);
                 pgpe_error_handle_fault(PGPE_ERR_CODE_AVSBUS_STATUS_READ_UNKNOWN_ERROR);
                 pgpe_error_state_loop();
                 break;

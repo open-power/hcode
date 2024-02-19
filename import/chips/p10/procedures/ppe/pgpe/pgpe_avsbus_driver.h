@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -95,6 +95,27 @@ typedef struct avs_profile
     uint32_t avg_time;
 } avs_profile_t;
 
+typedef union avs_dtls
+{
+    uint32_t value;
+    struct
+    {
+        uint32_t vlt_bnum: 8;
+        uint32_t vlt_rnum: 8;
+        uint32_t cur_bnum: 8;
+        uint32_t cur_rnum: 8;
+    } fields;
+} avs_dtls_t;
+
+typedef struct pgpe_avsbus_usr_dtls
+{
+    avs_dtls_t avs_b_r_dtls;
+    uint32_t cmd_data;
+    uint32_t scale_idx;
+} pgpe_avsbus_usr_dtls_t;
+
+
+
 #define IDD_MIN_CAPTURE_SIZE 16
 typedef struct pgpe_avsbus
 {
@@ -152,8 +173,8 @@ typedef struct pgpe_avsbus
     uint16_t idd_prev_10ma;
     uint16_t version;
     uint16_t min_current_enable;
+    pgpe_avsbus_usr_dtls_t avs_bus_ffdc;
 } pgpe_avsbus_t;
-
 
 #define avs_get_vrm_start_dly_count(rail) G_pgpe_avsbus.vrm_start_dly_count[rail]
 #define avs_get_vrm_incr_dly_count_per_uv(rail) G_pgpe_avsbus.vrm_incr_dly_uv_per_cnt[rail]
@@ -165,9 +186,11 @@ void* pgpe_avsbus_data_addr();
 void pgpe_avsbus_init_bus(uint32_t bus_num);
 void pgpe_avsbus_voltage_write(uint32_t bus_num, uint32_t rail_num, uint32_t volt_mv,  int32_t delta_volt_mv,
                                uint32_t rail);
-void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* cmd_data);
+void pgpe_avsbus_voltage_read(uint32_t bus_num, uint32_t rail_num, uint32_t* cmd_data, uint32_t rail);
 void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_current, uint32_t current_scale_idx);
-void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status);
-void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask, uint32_t* ret_status);
+void pgpe_avsbus_status_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret_status, uint32_t rail,
+                             uint32_t i_cmd_type);
+void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask,
+                              uint32_t* ret_status, uint32_t current_scale_idx);
 
 #endif
