@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -43,6 +43,9 @@
 const uint32_t FDIR_MC_WCLR = 0x6E0EFE47;
 const uint32_t FDIR_MC_WOR  = 0x6E0EFE46;
 
+uint32_t    g_call_home_mma_on_avg_accum_8ths;
+uint32_t    g_call_home_tick_count;
+
 extern XgpeHeader_t* G_xgpe_header_data;
 uint32_t G_throttleOn = 0;
 uint32_t G_throttleCount = 0;
@@ -59,6 +62,7 @@ extern uint32_t G_OCB_OPITFSVRR;
 
 void xgpe_eco_mode_update();
 extern iddq_state_t G_iddq;
+call_home_t* G_call_home;
 
 void xgpe_irq_fit_init()
 {
@@ -78,11 +82,15 @@ void xgpe_irq_fit_init()
     occ_shared_data->error_log_offset = offsetof(HcodeOCCSharedData_t, errlog_idx);
     occ_shared_data->pstate_table_offset = offsetof(HcodeOCCSharedData_t, pstate_table);
     occ_shared_data->iddq_activity_sample_depth = IDDQ_FIT_SAMPLE_TICKS;
+    occ_shared_data->call_home_offset = offsetof(HcodeOCCSharedData_t, call_home);
 
     G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
                                            occ_shared_data->iddq_data_offset);
     G_iddq.p_wof_val =  (pgpe_wof_values_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
                         occ_shared_data->pgpe_data_offset);
+
+    G_call_home = (call_home_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
+                                 occ_shared_data->call_home_offset);
 
 
     PK_TRACE("FIT: Initializing FIT p_act_val=0x%x p_wof_val=0x%x", (uint32_t)G_iddq.p_act_val,
@@ -545,6 +553,9 @@ void handle_wof_iddq_values()
     uint32_t opitasv2;
     uint32_t opitasv3;
     uint32_t occflg6 = in32(G_OCB_OCCFLG6);
+    uint32_t active_core_cnt = 0;
+    uint32_t mma_on_accum_8ths = 0;
+    uint32_t mma_on_avg_8ths = 0;
 
     opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);//Read PCB Type A0(Core off)
     opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);//Read PCB Type A1(Core Vmin)
@@ -556,14 +567,11 @@ void handle_wof_iddq_values()
         if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c) &&
             !(occflg6 & CORE_MASK(c))) //skip the cores which are in eco mode
         {
-            //if core is ON/VMIN(0) and VMIN(0))
-            if ( (!(opitasv0 & CORE_MASK(c))) && !(opitasv1 & CORE_MASK(c)))
+
+            //if core MMA is OFF(1)
+            if (opitasv2 & CORE_MASK(c))
             {
-                //if core MMA is OFF(1)
-                if (opitasv2 & CORE_MASK(c))
-                {
-                    G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_MMA_OFF]++;
-                }
+                G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_MMA_OFF]++;
             }
 
             //if core c is Vmin(1)
@@ -581,6 +589,8 @@ void handle_wof_iddq_values()
             {
                 G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORECACHE_OFF]++;
             }
+
+            active_core_cnt++;
         }
         else if (!(occflg6 & CORE_MASK(c)))
         {
@@ -595,22 +605,49 @@ void handle_wof_iddq_values()
 
     if(G_iddq.tick_cnt == IDDQ_FIT_SAMPLE_TICKS)
     {
+        mma_on_accum_8ths = 0;
 
         for (c = 0; c < MAX_CORES; c++)
         {
             if (in32(TP_TPCHIP_OCC_OCI_OCB_CCSR_RW) & CORE_MASK(c) &&
                 !(occflg6 & CORE_MASK(c)))
             {
+                //Compute MMA pwr on average
+                mma_on_accum_8ths +=
+                    (IDDQ_FIT_SAMPLE_TICKS - G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_MMA_OFF]);
+
                 G_iddq.p_act_val->act_val_core[c]  = G_iddq.curr_cnts.act_val_core[c];
                 G_iddq.curr_cnts.act_val_core[c] = 0;
             }
         }
+
+        if (active_core_cnt)
+        {
+            mma_on_avg_8ths = mma_on_accum_8ths / active_core_cnt;
+        }
+
 
         //G_iddq.p_wof_val->dw0.fields.vratio_vdd_avg = G_iddq.vratio_vdd_accum / G_iddq.tick_cnt;
         //G_iddq.p_wof_val->dw0.fields.vratio_vcs_avg = G_iddq.vratio_vcs_accum / G_iddq.tick_cnt;
         //G_iddq.vratio_vdd_accum = 0;
         //G_iddq.vratio_vcs_accum = 0;
         G_iddq.tick_cnt = 0;
+    }
+
+    g_call_home_mma_on_avg_accum_8ths += mma_on_avg_8ths;
+    g_call_home_tick_count++;
+
+    if ( G_call_home->dw0.fields.call_home_read  && active_core_cnt)
+    {
+        uint32_t call_home_mma_on_avg_8ths = g_call_home_mma_on_avg_accum_8ths / g_call_home_tick_count;
+        uint16_t mma_on_avg_pct =
+            (uint16_t)(((call_home_mma_on_avg_8ths * 100) + 4 / active_core_cnt));
+
+        G_call_home->dw1.fields.mma_on_avg_pct = mma_on_avg_pct;
+
+        g_call_home_mma_on_avg_accum_8ths = 0;
+        g_call_home_tick_count = 0;
+        G_call_home->dw0.fields.call_home_read = 0;
     }
 
 }

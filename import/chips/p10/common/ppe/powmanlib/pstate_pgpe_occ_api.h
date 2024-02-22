@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2021                                                    */
+/* COPYRIGHT 2015,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -119,6 +119,44 @@ typedef struct ipcmsg_set_pmcr
     uint64_t        pmcr;       // @todo Why is this a unit64_t?  It was in P9.
 } ipcmsg_set_pmcr_t;
 
+
+typedef struct
+{
+    union
+    {
+        uint64_t value;
+        struct
+        {
+            uint32_t high_order;
+            uint32_t low_order;
+        } words;
+        struct
+        {
+            uint64_t magic          : 16;
+            uint64_t version        :  8;
+            uint64_t reserved1      :  8;
+            uint64_t length         : 16;
+            uint64_t reserved2      :  8;
+            uint64_t call_home_read :  8;
+        } fields;
+    } dw0;
+    union
+    {
+        uint64_t value;
+        struct
+        {
+            uint32_t high_order;
+            uint32_t low_order;
+        } words;
+        struct
+        {
+            uint64_t mma_on_avg_pct : 16;
+            uint64_t reserved1      : 16;
+            uint64_t reserved2      : 16;
+            uint64_t reserved3      : 16;
+        } fields;
+    } dw1;
+} call_home_t;
 
 //
 // WOF Control Actions
@@ -377,7 +415,7 @@ typedef struct
     /// Pstate Table offset from start of OCC Shared SRAM
     uint16_t            pstate_table_offset;
 
-    uint16_t            reserved;
+    uint16_t            call_home_offset;
 
     ///IDDQ Activity sample depth(number of samples accumulated)
     uint16_t            iddq_activity_sample_depth;
@@ -399,6 +437,9 @@ typedef struct
 
     /// Pstate Table for OCC consumption
     OCCPstateTable_t    pstate_table;
+
+    //Call home data of MMA
+    call_home_t        call_home;
 
 } HcodeOCCSharedData_t;
 
