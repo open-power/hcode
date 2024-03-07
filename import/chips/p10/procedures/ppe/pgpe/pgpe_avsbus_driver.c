@@ -528,8 +528,10 @@ void pgpe_avsbus_init()
     // Round:  16666 + 5 => 16671 / 10 = 1667ps
     if (pgpe_gppb_get_occ_complex_frequency_mhz())
     {
+        uint32_t pau_freq = pgpe_gppb_get_occ_complex_frequency_mhz() * 4 * 10;
+
         G_pgpe_avsbus.occ_cyc_time_ps = round_dec(1000000 / (pgpe_gppb_get_occ_complex_frequency_mhz()));
-        G_pgpe_avsbus.timebase_tick_ns = round_dec(2 * 10 * 1000 / pgpe_gppb_get_occ_complex_frequency_mhz());
+        G_pgpe_avsbus.timebase_tick_ns = round_dec(pau_freq / pgpe_gppb_get_occ_complex_frequency_mhz());
     }
 
     PK_TRACE_INF("AVS: occ_freq Mhz                         = %u",    pgpe_gppb_get_occ_complex_frequency_mhz());
