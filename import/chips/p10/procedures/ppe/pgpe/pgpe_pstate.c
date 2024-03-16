@@ -1902,7 +1902,10 @@ uint32_t pgpe_pstate_is_clip_bounded()
         ps_bounded = 1;
     }
 
-    if (pgpe_thr_ctrl_is_enabled())
+    // If throttle is pending , then only we need to check throttle bounded or
+    // not.
+    if (pgpe_thr_ctrl_is_enabled() &&
+        G_pgpe_pstate.throttle_pending)
     {
         if(G_pgpe_pstate.throttle_clip > G_pgpe_pstate.throttle_curr)
         {
