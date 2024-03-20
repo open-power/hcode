@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -519,7 +519,8 @@ void pgpe_wov_ocs_update_dirty()
         }
     }
 
-    if (G_pgpe_wov_ocs.tgt_pct >= pgpe_gppb_get_wov_overv_max_pct())
+    if (G_pgpe_wov_ocs.tgt_pct >= pgpe_gppb_get_wov_overv_max_pct() &&
+        pgpe_gppb_get_wov_overv_max_pct())
     {
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
