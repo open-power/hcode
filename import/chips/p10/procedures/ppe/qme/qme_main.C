@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2017,2023                                                    */
+/* COPYRIGHT 2017,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -54,25 +54,6 @@ qme_attr_init()
     uint8_t policy = 0;
     FAPI_TRY(FAPI_ATTR_GET( fapi2::ATTR_CORE_LPAR_MODE_POLICY, l_sys, policy));
     G_qme_record.a_lpar_policy = (uint32_t)policy;
-
-    if( in32(QME_LCL_SCRB) & BIT32(QME_SCRB_USE_LPAR_ATTRIBUTE ) )
-    {
-        if( G_qme_record.a_lpar_policy == fapi2::ENUM_ATTR_CORE_LPAR_MODE_POLICY_FOLLOW_FUSED_STATE )
-        {
-            G_qme_record.lpar_core_mode_select = G_qme_record.fused_core_enabled;
-        }
-        else if( G_qme_record.a_lpar_policy == fapi2::ENUM_ATTR_CORE_LPAR_MODE_POLICY_LPAR_PER_CORE )
-        {
-            G_qme_record.lpar_core_mode_select = 1;
-        }
-        else
-        {
-            G_qme_record.lpar_core_mode_select = 0;
-        }
-
-        PKTRACE("USING LPAR ATTRIBUTE %x SELECT LPAR CORE/THREAED MODE %x", G_qme_record.a_lpar_policy,
-                G_qme_record.lpar_core_mode_select);
-    }
 
 #ifdef USE_RUNN
     uint8_t runn_mode      = 0;
@@ -258,6 +239,28 @@ main()
 
     // Initialize the Stop state and Pstate tasks
     qme_init();
+
+    // Update lpar core mode select
+    if( in32(QME_LCL_SCRB) & BIT32(QME_SCRB_USE_LPAR_ATTRIBUTE ) )
+    {
+        if( G_qme_record.a_lpar_policy == fapi2::ENUM_ATTR_CORE_LPAR_MODE_POLICY_FOLLOW_FUSED_STATE )
+        {
+            G_qme_record.lpar_core_mode_select = G_qme_record.fused_core_enabled;
+        }
+        else if( G_qme_record.a_lpar_policy == fapi2::ENUM_ATTR_CORE_LPAR_MODE_POLICY_LPAR_PER_CORE )
+        {
+            G_qme_record.lpar_core_mode_select = 1;
+        }
+        else
+        {
+            G_qme_record.lpar_core_mode_select = 0;
+        }
+
+        PKTRACE("USING LPAR ATTRIBUTE %x SELECT LPAR CORE/THREAED MODE %x", G_qme_record.a_lpar_policy,
+                G_qme_record.lpar_core_mode_select);
+    }
+
+
 
 #if ENABLE_MACHINE_CHECK_HANDLER
     IOTA_MC_HANDLER(qme_machine_check_handler);
