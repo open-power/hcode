@@ -40,6 +40,7 @@
     #include <exp_collect_explorer_saved_A_log.H>
     #include <exp_collect_explorer_saved_B_log.H>
     #include <ody_pack_ecs_data.H>
+    #include <ody_pack_draminit_msgblock_data.H>
 
 #endif
 
