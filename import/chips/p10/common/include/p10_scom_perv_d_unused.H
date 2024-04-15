@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -520,14 +520,6 @@ static const uint64_t SINGLE_OTP_ROM_OTPROM_REG24 = 0x00018018ull;
 static const uint32_t SINGLE_OTP_ROM_OTPROM_REG24_REGISTER24 = 0;
 static const uint32_t SINGLE_OTP_ROM_OTPROM_REG24_REGISTER24_LEN = 64;
 //<< [SINGLE_OTP_ROM_OTPROM_REG24]
-// perv/reg00026.H
-
-//>> [SINGLE_OTP_ROM_OTPROM_REG3]
-static const uint64_t SINGLE_OTP_ROM_OTPROM_REG3 = 0x00018003ull;
-
-static const uint32_t SINGLE_OTP_ROM_OTPROM_REG3_REGISTER3 = 0;
-static const uint32_t SINGLE_OTP_ROM_OTPROM_REG3_REGISTER3_LEN = 64;
-//<< [SINGLE_OTP_ROM_OTPROM_REG3]
 // perv/reg00026.H
 
 //>> [SINGLE_OTP_ROM_OTPROM_REG45]
