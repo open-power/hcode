@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -376,7 +376,9 @@ void tx_fifo_init(t_gcr_addr* gcr_addr)
     // The unload select is reduced by 1 to maintain same the margins
     // as were seen in simulation prior to the HW521134 verilog update.
     //put_ptr_field(gcr_addr, tx_fifo_l2u_dly, 0b001, read_modify_write);
-    put_ptr_field(gcr_addr, tx_unload_sel,   0b100, read_modify_write);
+
+    // tx_fifo_l2u_dly and tx_unload_sel will be setup in the HWPs
+    //put_ptr_field(gcr_addr, tx_unload_sel,   0b100, read_modify_write);
 
     put_ptr_field_fast(gcr_addr, tx_clr_unload_clk_disable,   0b1);
     put_ptr_field_fast(gcr_addr, tx_fifo_init,   0b1);
