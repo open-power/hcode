@@ -528,10 +528,8 @@ void pgpe_avsbus_init()
     // Round:  16666 + 5 => 16671 / 10 = 1667ps
     if (pgpe_gppb_get_occ_complex_frequency_mhz())
     {
-        uint32_t pau_freq = pgpe_gppb_get_occ_complex_frequency_mhz() * 4 * 10;
-
         G_pgpe_avsbus.occ_cyc_time_ps = round_dec(1000000 / (pgpe_gppb_get_occ_complex_frequency_mhz()));
-        G_pgpe_avsbus.timebase_tick_ns = round_dec(pau_freq / pgpe_gppb_get_occ_complex_frequency_mhz());
+        G_pgpe_avsbus.timebase_tick_ns = round_dec(2 * 10 * 1000 / pgpe_gppb_get_occ_complex_frequency_mhz());
     }
 
     PK_TRACE_INF("AVS: occ_freq Mhz                         = %u",    pgpe_gppb_get_occ_complex_frequency_mhz());
@@ -544,7 +542,7 @@ void pgpe_avsbus_init()
         pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num());
 
         // Set the Vdone timeout
-        G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD] = us_to_tb(2000);  // 2ms
+        G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD] = us_to_tb(3000);  // 3ms
         G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VDD] = G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VDD];
     }
     else
@@ -560,7 +558,7 @@ void pgpe_avsbus_init()
         pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num());
 
         // Set the Vdone timeout
-        G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(2000);  // 2ms
+        G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(3000);  // 3ms
     }
     else
     {
