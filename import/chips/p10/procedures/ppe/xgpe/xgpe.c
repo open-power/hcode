@@ -25,6 +25,7 @@
 #include "xgpe.h"
 #include "pstate_pgpe_xgpe_api.h"
 #include "ppe42_cache.h"
+#include <p10_oci_proc.H>
 
 #define MACHINE_CHECK_ADDR 0xFFF20024
 
@@ -139,9 +140,11 @@ uint32_t xgpe_errl_create(const uint32_t i_rc,
 void createPgpelog()
 {
     uint32_t status = ERRL_STATUS_SUCCESS;
-    uint32_t srr0 = in32(0xc0020180); //SRR0
-    uint32_t lr   = in32(0xc0020188); //LR
-    uint32_t ctr  = in32(0xc0020190); //CTR
+    uint32_t srr0 = in32(TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXISRR0); //SRR0
+    uint32_t lr   = in32(TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXILR); //LR
+    //THis is defined in unused header, hence using the direct address
+    //TP_TPCHIP_OCC_OCI_GPE2_OCB_GPEXIDBGINF = 0xc00200f8u
+    uint32_t iar  = in32(0xc00200f8); //IAR
     errlDataUsrDtls_t usrDtlsSect = {0};
     errlPpeRegs_t pgpeDbgRegs = {{0}};
     PgpeHeader_t* pgpe_hdr_data = (PgpeHeader_t*)(PGPE_BASE_ADDRESS + PGPE_HCODE_HEADER_OFFSET);
@@ -191,7 +194,7 @@ void createPgpelog()
          * @custdesc    Runtime embedded firmware error, detected pgpe error
          */
         PPE_LOG_ERR_CRITICAL ( XGPE_RC_PGPE_CRITICAL_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
-                               srr0, lr, ctr,
+                               srr0, lr, iar,
                                &usrDtlsSect, NULL, status );
 
         PK_TRACE ("createPgpelog critical: status %d",  status);
