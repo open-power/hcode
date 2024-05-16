@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2015,2021
+# COPYRIGHT 2015,2024
 # [+] International Business Machines Corp.
 #
 #
@@ -133,6 +133,7 @@
                 .set SMFCTRL,                       511 # Ultravisor
                 .set HEIR,                          339
                 .set MMCR0,                         795 # 779
+                .set PSSCR,                         855
                 .set HID,                           1008
                 .set PIR,                           1023
 
@@ -216,6 +217,8 @@
                 .set HDICE_BIT_POS,                 63
                 .set PMAE_BIT_POS,                  37
                 .set PMAO_BIT_POS,                  56
+                .set REQ_LVL_STOP15,                15
+                .set REQ_LVL_BIT_POS,               60
                 
 
 
@@ -1252,6 +1255,15 @@ cmplwi      THREAD_ID_REG,  0
 beq         save_msg_snd_int
 
 skip_msg_snd_cleanup:
+
+#--------------------------------------------------------------------------------------------
+#update PSSCR [RL]  with 15. This is to help outside world decisively conclude that self restore
+#is successfully complete
+li          TEMP_REG1,      REQ_LVL_STOP15
+mfspr       TEMP_REG2,      PSSCR
+insrdi      TEMP_REG2,      TEMP_REG1, 4, REQ_LVL_BIT_POS
+mtspr       PSSCR,          TEMP_REG2                           #Updated Request Level to STOP15 for self restore case.
+#--------------------------------------------------------------------------------------------
 addi        TEMP_REG1,      RMOR_INIT_REG,  HRMOR_RESTORE_OFFSET
 cmplwi      THREAD_ID_REG,  0
 beq         update_srrx
