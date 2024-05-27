@@ -26,7 +26,6 @@
 #include "pstate_pgpe_xgpe_api.h"
 #include "ppe42_cache.h"
 
-
 extern uint32_t G_OCB_OCCFLG3_OR;
 
 GPE_BUFFER(ipc_async_cmd_t G_ipc_msg_xgpe_pgpe);
@@ -138,40 +137,61 @@ uint32_t xgpe_errl_create(const uint32_t i_rc,
 void createPgpelog()
 {
     uint32_t status = ERRL_STATUS_SUCCESS;
-    uint32_t srr0 = in32(0xc0000180); //SRR0
-    uint32_t lr   = in32(0xc0000188); //LR
-    uint32_t ctr  = in32(0xc0000190); //CTR
-
+    uint32_t srr0 = in32(0xc0020180); //SRR0
+    uint32_t lr   = in32(0xc0020188); //LR
+    uint32_t ctr  = in32(0xc0020190); //CTR
+    errlDataUsrDtls_t usrDtlsSect = {0};
+    errlPpeRegs_t pgpeDbgRegs = {{0}};
     PgpeHeader_t* pgpe_hdr_data = (PgpeHeader_t*)(PGPE_BASE_ADDRESS + PGPE_HCODE_HEADER_OFFSET);
-    uint32_t g_pgpe_scr_brd_addr = pgpe_hdr_data->g_pgpe_scrBrdAddr;
     uint32_t g_pgpe_pk_trace_buf = pgpe_hdr_data->g_pgpe_traceAddr;
 
-    errlDataUsrDtls_t usrDtlsSect = {0};
 
-    errlDataUsrDtls_t usrDtlsSect1 = {0};
-    errlPpeRegs_t pgpeDbgRegs = {{0}};
+    if ( in32(OCB_OCCFLG2) & 0x00000008)
+    {
+        /*
+         * @errortype
+         * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
+         * @reasoncode  XGPE_RC_PGPE_INFO_MCH_CHK_ERR
+         * @devdesc     Supplementary log for Error Detected from PGPE
+         * @custdesc    Runtime embedded firmware error, detected pgpe error
+         */
 
-    getPpeRegsUsrDtls (ERRL_SOURCE_PGPE, 0, &pgpeDbgRegs, &usrDtlsSect);
+        out32(OCB_OCCFLG2_CLR, 0x00000008);
+        getPpeRegsUsrDtls (ERRL_SOURCE_PGPE, 0, &pgpeDbgRegs, &usrDtlsSect);
+        PPE_LOG_ERR_INF ( XGPE_RC_PGPE_INFO_MCH_CHK_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
+                          0, 0, 0,
+                          &usrDtlsSect, status );
+        PK_TRACE ("createPgpelog info: status %d",  status);
+    }
+    else
+    {
+        uint32_t g_pgpe_scr_brd_addr = pgpe_hdr_data->g_pgpe_scrBrdAddr;
 
-    usrDtlsSect.pNext = &usrDtlsSect1;
-    PK_TRACE("g_pgpe_scr_brd_addr %08x", g_pgpe_scr_brd_addr);
-    PK_TRACE("g_pgpe_pk_trace_buf %08x", g_pgpe_pk_trace_buf);
 
-    getPpeScrBrdUsrDtls (ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_scr_brd_addr, &usrDtlsSect1);
+        errlDataUsrDtls_t usrDtlsSect1 = {0};
 
-    /*
-     * @errortype
-     * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
-     * @reasoncode  XGPE_RC_PGPE_CRITICAL_ERR
-     * @userdata1   SRR0
-     * @userdata2   LR
-     * @userdata3   CTR
-     * @devdesc     Critical Error Detected from PGPE
-     * @custdesc    Runtime embedded firmware error, detected pgpe error
-     */
-    PPE_LOG_ERR_CRITICAL ( XGPE_RC_PGPE_CRITICAL_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
-                           srr0, lr, ctr,
-                           &usrDtlsSect, NULL, status );
+        getPpeRegsUsrDtls (ERRL_SOURCE_PGPE, 0, &pgpeDbgRegs, &usrDtlsSect);
 
-    PK_TRACE ("createPgpelog critical: status %d",  status);
+        usrDtlsSect.pNext = &usrDtlsSect1;
+        PK_TRACE("g_pgpe_scr_brd_addr %08x", g_pgpe_scr_brd_addr);
+        PK_TRACE("g_pgpe_pk_trace_buf %08x", g_pgpe_pk_trace_buf);
+
+        getPpeScrBrdUsrDtls (ERRL_SOURCE_PGPE, 0, (uint8_t*)g_pgpe_scr_brd_addr, &usrDtlsSect1);
+
+        /*
+         * @errortype
+         * @moduleid    XGPE_MODID_HANDLE_PGPE_ERRL
+         * @reasoncode  XGPE_RC_PGPE_CRITICAL_ERR
+         * @userdata1   SRR0
+         * @userdata2   LR
+         * @userdata3   CTR
+         * @devdesc     Critical Error Detected from PGPE
+         * @custdesc    Runtime embedded firmware error, detected pgpe error
+         */
+        PPE_LOG_ERR_CRITICAL ( XGPE_RC_PGPE_CRITICAL_ERR, 0, XGPE_MODID_HANDLE_PGPE_ERRL,
+                               srr0, lr, ctr,
+                               &usrDtlsSect, NULL, status );
+
+        PK_TRACE ("createPgpelog critical: status %d",  status);
+    }
 }

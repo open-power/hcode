@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2023                                                    */
+/* COPYRIGHT 2020,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -42,7 +42,7 @@ extern "C" {
 // Max registers (XIRs) to be collected for belly-up PPEs
 #define ERRL_PPE_REGS_MAX 5
 #define ERRL_PPE_SCRBRD_SIZE 256
-#define ERRL_PPE_TRACE_SIZE  1024
+#define ERRL_PPE_TRACE_SIZE  512
 
 /// Status code of error logging from error logging infrastructure
 enum errlStatusCodes

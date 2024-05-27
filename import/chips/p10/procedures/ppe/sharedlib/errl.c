@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2023                                                    */
+/* COPYRIGHT 2020,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -47,7 +47,7 @@
 
 // Error Log payload for the 1 errors to be committed by local GPE
 uint8_t G_errLogUnrec[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
-#ifdef __PPE_PGPE
+#ifndef __PPE_QME
 uint8_t G_errLogInfo[ERRL_MAX_ENTRY_SZ]  __attribute__ ((aligned (8))) = {0};
 #endif
 
@@ -216,6 +216,8 @@ void initErrLogging ( const uint8_t              i_errlSource,
                 G_errlConfigData.traceSz = ERRL_TRACE_DATA_SZ_XGPE;
                 G_errlConfigData.gpeBaseSlot = ERRL_SLOT_XGPE_BASE;
                 G_gpeErrLogs[ERRL_SLOT_XGPE_UNREC] = (errlHndl_t) &G_errLogUnrec;
+                G_gpeErrLogs[ERRL_SLOT_XGPE_INF]   = (errlHndl_t) &G_errLogInfo;
+                l_maxSlot = MAX_ELOG_SLOTS_PGPE;
                 break;
 
 #endif //   __PPE_QME
@@ -304,6 +306,7 @@ uint8_t getErrSlotNumAndErrId (
 
             case ERRL_SOURCE_XGPE:
                 l_slotmask = ERRL_SLOT_MASK_XGPE_UNREC;
+                l_maxSlot = MAX_ELOG_SLOTS_PGPE;
                 break;
 #endif
 
@@ -320,6 +323,11 @@ uint8_t getErrSlotNumAndErrId (
         {
             case ERRL_SOURCE_PGPE:
                 l_slotmask = ERRL_SLOT_MASK_PGPE_INFO;
+                l_maxSlot = MAX_ELOG_SLOTS_PGPE;
+                break;
+
+            case ERRL_SOURCE_XGPE:
+                l_slotmask = ERRL_SLOT_MASK_XGPE_INFO;
                 l_maxSlot = MAX_ELOG_SLOTS_PGPE;
                 break;
         }
@@ -481,7 +489,8 @@ uint32_t reportErrorLog (errlHndl_t* io_err, bool i_report)
     uint32_t l_status = ERRL_STATUS_SUCCESS;
     uint32_t l_maxSlots =  MAX_ELOG_SLOTS_PER_GPE;
 
-    if( ERRL_SOURCE_PGPE == G_errlConfigData.source )
+    if( ERRL_SOURCE_PGPE == G_errlConfigData.source ||
+        ERRL_SOURCE_XGPE == G_errlConfigData.source )
     {
         l_maxSlots = MAX_ELOG_SLOTS_PGPE;
     }

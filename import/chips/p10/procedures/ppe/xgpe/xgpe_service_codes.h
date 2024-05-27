@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2021,2023                                                    */
+/* COPYRIGHT 2021,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -34,6 +34,7 @@ enum xgpeReasonCode
     XGPE_SCOM_MACHINE_CHECK_ERROR = 0x05,
     XGPE_RC_PGPE_CRITICAL_ERR     = 0x06,
     XGPE_RC_PGPE_INFO_ERR         = 0x07,
+    XGPE_RC_PGPE_INFO_MCH_CHK_ERR = 0x08,
 };
 
 enum xgpeExtReasonCode
