@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2023                                                    */
+/* COPYRIGHT 2020,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -35,7 +35,7 @@ extern "C" {
 
 // Size of traces to add to ERRL_USR_DTL_TRACE_DATA
 #define ERRL_TRACE_DATA_SZ_PGPE 0x438
-#define ERRL_TRACE_DATA_SZ_XGPE 0x438
+#define ERRL_TRACE_DATA_SZ_XGPE 0x238
 #define ERRL_TRACE_DATA_SZ_QME  0x238
 
 // Defines used to programmatically arrive at QME instance slot mask
@@ -50,12 +50,12 @@ static const uint32_t ERRL_SLOT_SHIFT = 0x80000000;
 // 1 slot for informational logs and so on. This can be trivially extended to
 // multiple slots of the same severity of error as well.
 // @note  The algorithm to get an error slot assumes the all errors per GPE
-//        are ordered sequentially without mixing with errors from other GPEs
+// are ordered sequentially without mixing with errors from other GPEs
 // @note  Per current requirement & memory constraints there will only be 1
-//        unrecoverable & 1 informational error log for PGPE and one Unrecoverable
-//        error log for XGPE and QME.
-//        Total memory for error logs = 11 * 2 = 22KB in OCC SRAM,
-//        of which, 16KB would be copied down from per QME SRAM to OCC SRAM
+// unrecoverable & 1 informational error log for PGPE/XGPEand one Unrecoverable
+// error log for QME.
+// Total memory for error logs = 12 * 2 = 24KB in OCC SRAM,
+// of which, 16KB would be copied down from per QME SRAM to OCC SRAM
 /* Slot Masks */
 typedef enum
 {
@@ -71,6 +71,7 @@ typedef enum
     ERRL_SLOT_MASK_PGPE_UNREC     = 0xFF7FFFFF,
     ERRL_SLOT_MASK_PGPE_INFO      = 0xFFBFFFFF,
     ERRL_SLOT_MASK_XGPE_UNREC     = 0xFFDFFFFF,
+    ERRL_SLOT_MASK_XGPE_INFO      = 0xFFEFFFFF,
 } ERRL_SLOT_MASK;
 
 // Index into array of error log entries in hcode_error_table_t
@@ -96,6 +97,7 @@ enum elog_entry_index
     ERRL_SLOT_PGPE_INF      = 0x09,
     ERRL_SLOT_XGPE_BASE     = 0x0A,
     ERRL_SLOT_XGPE_UNREC    = 0x0A, // 10
+    ERRL_SLOT_XGPE_INF      = 0x0B, // 11
     ERRL_SLOT_INVALID       = 0xFF, // default invalid
 };
 
