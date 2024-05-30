@@ -268,6 +268,10 @@ void
 __ppe42_pib_reset_handler()
 {
     uint32_t srr1  = mfspr(SPRN_SRR1);
+#if defined __PPE_PGPE
+    uint32_t OCCFLG2_OR = 0xc00605a0;
+    uint32_t SIBRC_TIMOUT_ACTIVE = 0x00000008;
+#endif
 
     if ((srr1 & MSR_SIBRC) == MSR_SIBRC)
     {
@@ -281,6 +285,9 @@ __ppe42_pib_reset_handler()
         // note pib reset is being detected
         // this flag will be cleared by fit timer if pib reset recovers
         G_pib_reset_flag++;
+#if defined __PPE_PGPE
+        out32(OCCFLG2_OR, SIBRC_TIMOUT_ACTIVE);
+#endif
 
         // DELAY to wait pib reset to complete
         volatile uint32_t loop;
