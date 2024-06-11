@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -600,7 +600,7 @@ inline uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c, uint32_
 
     //Round-up by adding 1/2
     delay = (((pgpe_gppb_get_dds_delay_ps_slope(VPD_PT_SET_BIASED, c, r)) *
-              (ps_delta)) >> (DDS_DELAY_SLOPE_FP_SHIFT_12 - 1));
+              (ps_delta)) >> (DDS_DELAY_SLOPE_FP_SHIFT_8 - 1));
 
     if (pgpe_gppb_get_dds_delay(c, r) <= pgpe_gppb_get_dds_delay(c, r + 1))
     {
