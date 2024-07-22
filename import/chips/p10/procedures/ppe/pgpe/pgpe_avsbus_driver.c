@@ -573,7 +573,7 @@ void pgpe_avsbus_init()
         pgpe_avsbus_init_bus(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num());
 
         // Set the Vdone timeout
-        G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(2000);  // 2ms
+        G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(3000);  // 3ms
         G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS] = G_pgpe_avsbus.incr_to_dly_tb[RUNTIME_RAIL_VCS];
     }
     else
