@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -256,7 +256,7 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
 
     int l_tx_iref_clock_dac_value = ( is_p10_dd1() ) ? 0x4 : 0x2;
     put_ptr_field(gcr_addr, tx_iref_clock_dac, l_tx_iref_clock_dac_value, read_modify_write); //pg
-    put_ptr_field(gcr_addr, tx_iref_vset_dac , l_vio_volt               , read_modify_write); //pg
+    put_ptr_field(gcr_addr, tx_iref_vset_dac, l_vio_volt, read_modify_write);                 //pg
 
 
     //CQ521314 never turn on tx_bank_controls_dc(0) = dcc_comp_en_dc
@@ -276,16 +276,21 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     set_gcr_addr_lane(gcr_addr, bcast_all_lanes);
     int l_tx_boost_en = (mem_pg_field_get(ppe_channel_loss) <= 1) ? 0x01 : 0x00;
 
-    put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write);
+    if (l_data_rate == 3) // 38.4Gbps
+    {
+        l_tx_boost_en = 0;
+    }
+
+    put_ptr_field(gcr_addr, tx_boost_hs_en, l_tx_boost_en, read_modify_write);
 
     if ( is_p10_dd1() )
     {
-        put_ptr_field(gcr_addr, tx_d2_ctrl    , P10_DD1_TX_D2_CTRL,     read_modify_write);
+        put_ptr_field(gcr_addr, tx_d2_ctrl, P10_DD1_TX_D2_CTRL,     read_modify_write);
         put_ptr_field(gcr_addr, tx_d2_div_ctrl, P10_DD1_TX_D2_DIV_CTRL, read_modify_write);
     }
     else
     {
-        put_ptr_field(gcr_addr, tx_d2_ctrl    , l_data_rate_settings->tx_d2_ctrl,     read_modify_write);
+        put_ptr_field(gcr_addr, tx_d2_ctrl, l_data_rate_settings->tx_d2_ctrl,     read_modify_write);
         put_ptr_field(gcr_addr, tx_d2_div_ctrl, l_data_rate_settings->tx_d2_div_ctrl, read_modify_write);
     }
 
@@ -339,20 +344,27 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     // CWS CHANGED THIS FROM 6 -> 8
     put_ptr_field(gcr_addr, rx_loff_timeout, 10, read_modify_write); //pg
 
-    put_ptr_field(gcr_addr, rx_iref_clock_dac  , 0x2, read_modify_write); //pg
+    put_ptr_field(gcr_addr, rx_iref_clock_dac, 0x2, read_modify_write);   //pg
 
     if (l_data_rate == 3)
     {
-        put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x3, read_modify_write); //pg
+        put_ptr_field(gcr_addr, rx_iref_data_dac, 0x3, read_modify_write);    //pg
+        put_ptr_field(gcr_addr, rx_iref_clock_dac, 0x4, read_modify_write);   //pg
     }
     else
     {
-        put_ptr_field(gcr_addr, rx_iref_data_dac   , 0x2, read_modify_write); //pg
+        put_ptr_field(gcr_addr, rx_iref_data_dac, 0x2, read_modify_write);    //pg
     }
 
 
     // HW548766/HW560156: Set rx_iref_vset_dac to 3 in BIST for P10 DD1 vertical chiplets at >=32Gbps
     int l_rx_vio_volt = ( fw_field_get(fw_bist_en) && is_p10_dd1_v_chiplet() && (l_data_rate >= 2) ) ? 0x3 : l_vio_volt;
+
+    if (l_data_rate == 3) // 38.4Gbps
+    {
+        l_rx_vio_volt = 2;
+    }
+
     put_ptr_field(gcr_addr, rx_iref_vset_dac, l_rx_vio_volt, read_modify_write); //pg
 
     // HW544036: Flywheel snapshot does not work correctly for OpenCAPI / OMI.  Those applications happen to becommon oscillator
@@ -407,6 +419,14 @@ void io_hw_reg_init(t_gcr_addr* gcr_addr)
     int ki_kp_full_reg_val =
         (CDR_KI_RESET_VALUE << rx_pr_fw_inertia_amt_shift) |
         (CDR_KP_RESET_VALUE << rx_pr_phase_step_shift);
+
+    if (l_data_rate == 3) // 38.4Gbps
+    {
+        ki_kp_full_reg_val =
+            (CDR_KI_RESET_VALUE << rx_pr_fw_inertia_amt_shift) |
+            (0x08 << rx_pr_phase_step_shift);
+    }
+
     put_ptr_field(gcr_addr, rx_pr_ki_kp_full_reg, ki_kp_full_reg_val, fast_write); //pl
 
     put_ptr_field(gcr_addr, rx_pr_lock_ratio, CDR_LOCK_RATIO_RESET_VALUE, read_modify_write); //pl
@@ -501,7 +521,7 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
     put_ptr_field(gcr_addr, tx_ioreset,    0b0, read_modify_write); //pl
     int l_tx_boost_en = (mem_pg_field_get(ppe_channel_loss) <= 1) ? 0x01 : 0x00;
 
-    put_ptr_field(gcr_addr, tx_boost_hs_en , l_tx_boost_en, read_modify_write); //pl
+    put_ptr_field(gcr_addr, tx_boost_hs_en, l_tx_boost_en, read_modify_write);  //pl
     put_ptr_field(gcr_addr, tx_dcc_sel_alias, TX_DCC_SEL_ALIAS_DEFAULT, read_modify_write); //pl //HW544277
 
 
@@ -511,12 +531,12 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
 
     if ( is_p10_dd1() )
     {
-        put_ptr_field(gcr_addr, tx_d2_ctrl    , P10_DD1_TX_D2_CTRL,     read_modify_write); //pl
+        put_ptr_field(gcr_addr, tx_d2_ctrl, P10_DD1_TX_D2_CTRL,     read_modify_write);     //pl
         put_ptr_field(gcr_addr, tx_d2_div_ctrl, P10_DD1_TX_D2_DIV_CTRL, read_modify_write); //pl
     }
     else
     {
-        put_ptr_field(gcr_addr, tx_d2_ctrl    , l_data_rate_settings->tx_d2_ctrl,     read_modify_write); //pl
+        put_ptr_field(gcr_addr, tx_d2_ctrl, l_data_rate_settings->tx_d2_ctrl,     read_modify_write);     //pl
         put_ptr_field(gcr_addr, tx_d2_div_ctrl, l_data_rate_settings->tx_d2_div_ctrl, read_modify_write); //pl
     }
 
@@ -542,6 +562,14 @@ void io_reset_lane(t_gcr_addr* gcr_addr)
     int ki_kp_full_reg_val =
         (CDR_KI_RESET_VALUE << rx_pr_fw_inertia_amt_shift) |
         (CDR_KP_RESET_VALUE << rx_pr_phase_step_shift);
+
+    if (l_data_rate == 3) // 38.4Gbps
+    {
+        ki_kp_full_reg_val =
+            (CDR_KI_RESET_VALUE << rx_pr_fw_inertia_amt_shift) |
+            (0x08 << rx_pr_phase_step_shift);
+    }
+
     put_ptr_field(gcr_addr, rx_pr_ki_kp_full_reg, ki_kp_full_reg_val, fast_write); //pl
 
     put_ptr_field(gcr_addr, rx_pr_lock_ratio, CDR_LOCK_RATIO_RESET_VALUE, read_modify_write); //pl
@@ -716,24 +744,24 @@ void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk)
 
     if(rx_b_controls_int != 0)
     {
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b011111, read_modify_write); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001111, read_modify_write); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001011, read_modify_write); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001001, read_modify_write); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001000, read_modify_write); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b000000, read_modify_write); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b011111, read_modify_write);  //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001111, read_modify_write);  //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001011, read_modify_write);  //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001001, read_modify_write);  //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001000, read_modify_write);  //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b000000, read_modify_write);  //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
     }
 
     int rx_a_controls_int = get_ptr_field (gcr_addr, rx_a_bank_controls);
 
     if(rx_a_controls_int != 0)
     {
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b011111, read_modify_write); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001111, read_modify_write); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001011, read_modify_write); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001001, read_modify_write); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001000, read_modify_write); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b000000, read_modify_write); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b011111, read_modify_write);  //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001111, read_modify_write);  //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001011, read_modify_write);  //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001001, read_modify_write);  //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001000, read_modify_write);  //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b000000, read_modify_write);  //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
     }
 
 
@@ -763,8 +791,8 @@ void io_lane_power_on(t_gcr_addr* gcr_addr, bool enable_dl_clk)
     put_ptr_field(gcr_addr, rx_iodom_ioreset,        0b0, read_modify_write); //pl  reset rx io domain
 
     // -- HW532825 - Restore flywheel snapshot operation (set to 1 during io_lane_power_off)
-    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_a               , 0b0     , read_modify_write);//pl
-    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_b               , 0b0     , read_modify_write);//pl
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_a, 0b0, read_modify_write);                    //pl
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_b, 0b0, read_modify_write);                    //pl
 } //io_lane_power_on
 
 // Power down a lane (both RX and TX)
@@ -817,15 +845,15 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
     // However, this also enables the CDR and a CDR lock timer, which we don't want.
     // Disabling the psave cdr state machine will disable the timer but not the CDR itself.
     // Therefore we must also turn off the CDR manually here.
-    put_ptr_field(gcr_addr, rx_psave_cdr_disable_sm              , 0b1     , read_modify_write);//pl
-    put_ptr_field(gcr_addr,  rx_psave_cdrlock_mode_sel           , 0b11    , read_modify_write);//pl
-    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias      , 0b000000,
+    put_ptr_field(gcr_addr, rx_psave_cdr_disable_sm, 0b1, read_modify_write);                   //pl
+    put_ptr_field(gcr_addr,  rx_psave_cdrlock_mode_sel, 0b11, read_modify_write);               //pl
+    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b000000,
                   read_modify_write);//pl -- HW532825 - Need CDR disabled for the flywheel valid chicken switch to work
-    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_a               , 0b1     ,
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_a, 0b1,
                   read_modify_write);//pl -- HW532825 - Make sure flywheel snapshot cannot make us hang
-    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_b               , 0b1     ,
+    put_ptr_field(gcr_addr, rx_pr_psave_val_ena_b, 0b1,
                   read_modify_write);//pl -- HW532825 - Make sure flywheel snapshot cannot make us hang
-    put_ptr_field(gcr_addr, rx_psave_req_alt                     , 0b0     , read_modify_write);//pl
+    put_ptr_field(gcr_addr, rx_psave_req_alt, 0b0, read_modify_write);                          //pl
     int psave_sts = 1;
 
     while (psave_sts)
@@ -833,9 +861,9 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
         psave_sts = get_ptr_field(gcr_addr, rx_psave_sts_alt);
     }
 
-    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias       , 0b000000, read_modify_write);//pl
-    put_ptr_field(gcr_addr, rx_psave_cdr_disable_sm              , 0b0     , read_modify_write);//pl
-    put_ptr_field(gcr_addr,  rx_psave_cdrlock_mode_sel           , 0b00    , read_modify_write);//pl
+    put_ptr_field(gcr_addr, rx_pr_edge_track_cntl_ab_alias, 0b000000, read_modify_write);       //pl
+    put_ptr_field(gcr_addr, rx_psave_cdr_disable_sm, 0b0, read_modify_write);                   //pl
+    put_ptr_field(gcr_addr,  rx_psave_cdrlock_mode_sel, 0b00, read_modify_write);               //pl
 
     //Check that rx psave is quiesced and that req is not = 1 will set fir
     //If the powerdown lane is asked for but we are doing a init or recal than that a no-no see Mike S -- CQ522215
@@ -845,12 +873,12 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
 
     if(rx_b_bank_controls_int != 0x3F)
     {
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001000, read_modify_write ); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001001, read_modify_write ); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001011, read_modify_write ); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b001111, read_modify_write ); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b011111, read_modify_write ); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
-        put_ptr_field(gcr_addr, rx_b_bank_controls , 0b111111, read_modify_write ); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001000, read_modify_write );  //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001001, read_modify_write );  //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001011, read_modify_write );  //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b001111, read_modify_write );  //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b011111, read_modify_write );  //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_b_bank_controls, 0b111111, read_modify_write );  //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
     }
 
 
@@ -858,12 +886,12 @@ void io_lane_power_off(t_gcr_addr* gcr_addr)
 
     if(rx_a_bank_controls_int != 0x3F)
     {
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001000, read_modify_write ); //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001001, read_modify_write ); //pl.CTLE_PDWN( ABANK_DATA_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001011, read_modify_write ); //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b001111, read_modify_write ); //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b011111, read_modify_write ); //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
-        put_ptr_field(gcr_addr, rx_a_bank_controls , 0b111111, read_modify_write ); //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001000, read_modify_write );  //pl.CML2CMOS_EDGE0_PDWN( ABANK_CLK3_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001001, read_modify_write );  //pl.CTLE_PDWN( ABANK_DATA_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001011, read_modify_write );  //pl.CML2CMOS_DATA0_PDWN( ABANK_CLK5_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b001111, read_modify_write );  //pl.CML2CMOS_DATA1_PDWN( ABANK_CLK4_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b011111, read_modify_write );  //pl.IQGEN_PDWN( ABANK_CLK2_PDWN )
+        put_ptr_field(gcr_addr, rx_a_bank_controls, 0b111111, read_modify_write );  //pl.MINI_PR_PDWN( ABANK_CLK1_PDWN )
     }
 
 
