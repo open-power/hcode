@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2020                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -779,14 +779,6 @@ static const uint32_t TXPACKS_0_DEFAULT_DD_5_TX_BIT_REGS_FIR_PL_TX_PL_FIR_ERRS_R
 //<< [TXPACKS_0_DEFAULT_DD_5_TX_BIT_REGS_FIR_PL]
 // omi/reg00027.H
 
-//>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL11_PL]
-static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL11_PL = 0x8004844010012c3full;
-
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL11_PL_TX_NSEG_MAIN_16_24_HS_EN = 48;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL11_PL_TX_NSEG_MAIN_16_24_HS_EN_LEN = 9;
-//<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL11_PL]
-// omi/reg00027.H
-
 //>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL1G_PL]
 static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL1G_PL = 0x8004344010012c3full;
 
@@ -806,14 +798,6 @@ static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL21_PL_EN_LEN = 5;
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL21_PL_SEL = 56;
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL21_PL_SEL_LEN = 5;
 //<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL21_PL]
-// omi/reg00027.H
-
-//>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL9_PL]
-static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL9_PL = 0x8004744010012c3full;
-
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL9_PL_TX_PSEG_MAIN_16_24_HS_EN = 48;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL9_PL_TX_PSEG_MAIN_16_24_HS_EN_LEN = 9;
-//<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL9_PL]
 // omi/reg00027.H
 
 //>> [TXPACKS_1_DD_2_TX_BIT_REGS_CNTL16_PL]

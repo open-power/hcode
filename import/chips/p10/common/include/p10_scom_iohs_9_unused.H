@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -732,16 +732,6 @@ static const uint64_t IOO_RX0_0_RD_RX_BIT_REGS_FIR_ERROR_INJECT_PL = 0x800318001
 static const uint32_t IOO_RX0_0_RD_RX_BIT_REGS_FIR_ERROR_INJECT_PL_RX_PL_FIR_ERR_INJ = 48;
 static const uint32_t IOO_RX0_0_RD_RX_BIT_REGS_FIR_ERROR_INJECT_PL_RX_PL_FIR_ERR_INJ_LEN = 3;
 //<< [IOO_RX0_0_RD_RX_BIT_REGS_FIR_ERROR_INJECT_PL]
-// iohs/reg00040.H
-
-//>> [IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL]
-static const uint64_t IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL = 0x8003380010012c3full;
-
-static const uint32_t IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL_FW_INERTIA_AMT = 48;
-static const uint32_t IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL_FW_INERTIA_AMT_LEN = 4;
-static const uint32_t IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL_PHASE_STEP = 56;
-static const uint32_t IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL_PHASE_STEP_LEN = 7;
-//<< [IOO_RX0_0_RD_RX_BIT_REGS_MODE4_PL]
 // iohs/reg00040.H
 
 //>> [IOO_RX0_0_RD_RX_BIT_REGS_STAT2_PL]
@@ -1820,14 +1810,6 @@ static const uint32_t IOO_TX0_0_DD_5_TX_BIT_REGS_STAT2_PL_UP_CNT_RO_SIGNAL_LEN =
 static const uint32_t IOO_TX0_0_DD_5_TX_BIT_REGS_STAT2_PL_DOWN_CNT_RO_SIGNAL = 56;
 static const uint32_t IOO_TX0_0_DD_5_TX_BIT_REGS_STAT2_PL_DOWN_CNT_RO_SIGNAL_LEN = 8;
 //<< [IOO_TX0_0_DD_5_TX_BIT_REGS_STAT2_PL]
-// iohs/reg00042.H
-
-//>> [IOO_TX0_0_DD_TX_BIT_REGS_CNTL11_PL]
-static const uint64_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL11_PL = 0x8004840010012c3full;
-
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL11_PL_TX_NSEG_MAIN_16_24_HS_EN = 48;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL11_PL_TX_NSEG_MAIN_16_24_HS_EN_LEN = 9;
-//<< [IOO_TX0_0_DD_TX_BIT_REGS_CNTL11_PL]
 // iohs/reg00042.H
 
 //>> [IOO_TX0_0_DD_TX_BIT_REGS_CNTL1G_PL]

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020,2021                                                    */
+/* COPYRIGHT 2020,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1616,14 +1616,6 @@ static const uint32_t IOO_TX0_0_DD_4_TX_BIT_REGS_CNTL3_PL_RXDET_ENABLE = 52;
 static const uint32_t IOO_TX0_0_DD_4_TX_BIT_REGS_CNTL3_PL_RXDET_PULSE = 53;
 static const uint32_t IOO_TX0_0_DD_4_TX_BIT_REGS_CNTL3_PL_EOL_MODE_DISABLE = 54;
 //<< [IOO_TX0_0_DD_4_TX_BIT_REGS_CNTL3_PL]
-// iohs/reg00007.H
-
-//>> [IOO_TX0_0_DD_TX_BIT_REGS_CNTL9_PL]
-static const uint64_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL9_PL = 0x8004740010012c3full;
-
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL9_PL_TX_PSEG_MAIN_16_24_HS_EN = 48;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL9_PL_TX_PSEG_MAIN_16_24_HS_EN_LEN = 9;
-//<< [IOO_TX0_0_DD_TX_BIT_REGS_CNTL9_PL]
 // iohs/reg00007.H
 
 //>> [IOO_TX0_0_DD_TX_BIT_REGS_FIR_PL]

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2020                                                         */
+/* COPYRIGHT 2020,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -816,14 +816,6 @@ static const uint32_t TXPACKS_0_DEFAULT_DD_5_TX_BIT_REGS_CNTL21_PL_SEL_LEN = 5;
 //<< [TXPACKS_0_DEFAULT_DD_5_TX_BIT_REGS_CNTL21_PL]
 // omi/reg00017.H
 
-//>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL10_PL]
-static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL10_PL = 0x80047c4010012c3full;
-
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL10_PL_TX_NSEG_MAIN_0_15_HS_EN = 48;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL10_PL_TX_NSEG_MAIN_0_15_HS_EN_LEN = 16;
-//<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL10_PL]
-// omi/reg00017.H
-
 //>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL20_PL]
 static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL20_PL = 0x8004cc4010012c3full;
 
@@ -839,14 +831,6 @@ static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL30_PL = 0x80051c40100
 
 static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL30_PL_TX_FORCE_HS_FFE = 48;
 //<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL30_PL]
-// omi/reg00017.H
-
-//>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL8_PL]
-static const uint64_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL8_PL = 0x80046c4010012c3full;
-
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL8_PL_TX_PSEG_MAIN_0_15_HS_EN = 48;
-static const uint32_t TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL8_PL_TX_PSEG_MAIN_0_15_HS_EN_LEN = 16;
-//<< [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_CNTL8_PL]
 // omi/reg00017.H
 
 //>> [TXPACKS_0_DEFAULT_DD_TX_BIT_REGS_FIR_MASK_PL]

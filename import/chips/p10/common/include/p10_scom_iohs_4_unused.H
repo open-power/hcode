@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2021                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -1671,14 +1671,6 @@ static const uint64_t IOO_TX0_0_DD_5_TX_BIT_REGS_FIR_ERROR_INJECT_PL = 0x8004140
 static const uint32_t IOO_TX0_0_DD_5_TX_BIT_REGS_FIR_ERROR_INJECT_PL_TX_PL_FIR_ERR_INJ = 48;
 static const uint32_t IOO_TX0_0_DD_5_TX_BIT_REGS_FIR_ERROR_INJECT_PL_TX_PL_FIR_ERR_INJ_LEN = 2;
 //<< [IOO_TX0_0_DD_5_TX_BIT_REGS_FIR_ERROR_INJECT_PL]
-// iohs/reg00019.H
-
-//>> [IOO_TX0_0_DD_TX_BIT_REGS_CNTL8_PL]
-static const uint64_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL8_PL = 0x80046c0010012c3full;
-
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL8_PL_TX_PSEG_MAIN_0_15_HS_EN = 48;
-static const uint32_t IOO_TX0_0_DD_TX_BIT_REGS_CNTL8_PL_TX_PSEG_MAIN_0_15_HS_EN_LEN = 16;
-//<< [IOO_TX0_0_DD_TX_BIT_REGS_CNTL8_PL]
 // iohs/reg00019.H
 
 //>> [IOO_TX0_1_DD_0_TX_BIT_REGS_CNTL6_PL]
