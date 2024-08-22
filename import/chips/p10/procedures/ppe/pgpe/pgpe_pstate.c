@@ -1207,6 +1207,17 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
     //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
     G_pgpe_pstate.vratio_index_format       = (((active_core_accum_64th << 10) - 1) /
             G_pgpe_pstate.vratio_core_count);
+
+    //TODO , we need to cleanup these variables
+    //G_pgpe_pstate.vratio_index_format,G_pgpe_pstate.active_core_ratio_64th
+    //Max index 11 represents the index format to 0xFFFF
+    //if we vratio_index_format is greater than 0xFFFF,
+    // then we need to clip to 0xFFFF.
+    if (G_pgpe_pstate.vratio_index_format > 0xFFFF )
+    {
+        G_pgpe_pstate.vratio_index_format = 0xFFFF;
+    }
+
     PK_TRACE_INF("PSS: vratio_index_format=0x%08x", G_pgpe_pstate.vratio_index_format);
     G_pgpe_pstate.active_core_ratio_64th    = G_pgpe_pstate.vratio_index_format >> 10; //Index format back to 64ths
 
@@ -1250,10 +1261,10 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
 void pgpe_pstate_compute_vindex()
 {
-    uint32_t msd = (((G_pgpe_pstate.vratio_index_format - 0x07FF) & 0xF000) >> 12);
+    uint32_t msd = (((G_pgpe_pstate.vratio_vdd_rounded - 0x07FF) & 0xF000) >> 12);
     G_pgpe_pstate.vindex = (msd >= 4) ? (msd - 4) : 0;
 
-    PK_TRACE_INF("PSS: Vindex_format=0x%x, Vindex=0x%x", G_pgpe_pstate.vratio_index_format, G_pgpe_pstate.vindex);
+    PK_TRACE_INF("PSS: Vindex_format=0x%x, Vindex=0x%x", G_pgpe_pstate.vratio_vdd_rounded, G_pgpe_pstate.vindex);
 }
 
 uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set)
