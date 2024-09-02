@@ -159,12 +159,10 @@ void pgpe_pstate_init()
 
     G_pgpe_pstate.vrt                = 0;
     G_pgpe_pstate.vindex             = 0;
-    G_pgpe_pstate.active_core_ratio_64th    = 0;
     G_pgpe_pstate.vratio_vdd_snapup_64th    = 0;
     G_pgpe_pstate.vratio_vcs_snapup_64th    = 0;
     G_pgpe_pstate.vratio_vdd_rounded_64th   = 0;
     G_pgpe_pstate.vratio_vcs_rounded_64th   = 0;
-    G_pgpe_pstate.vratio_index_format       = 0;
     G_pgpe_pstate.vratio_vdd_loadline_64th  = 64;
     G_pgpe_pstate.vratio_vdd_ceff_inst_64th = 0;
     G_pgpe_pstate.vratio_vcs_loadline_64th  = 64;
@@ -1204,22 +1202,6 @@ void pgpe_pstate_compute_vratio(uint32_t pstate)
 
     PK_TRACE_INF("PSS: active_core_accum_64th=0x%08x, vratio_vdd_accum_64th=0x%08x, vratio_vcs_accum_64th=0x%08x",
                  active_core_accum_64th, vratio_vdd_accum_64th, vratio_vcs_accum_64th);
-    //Index Format is 16-bits. We accumulate in 6bits, so do a shift by 10
-    G_pgpe_pstate.vratio_index_format       = (((active_core_accum_64th << 10) - 1) /
-            G_pgpe_pstate.vratio_core_count);
-
-    //TODO , we need to cleanup these variables
-    //G_pgpe_pstate.vratio_index_format,G_pgpe_pstate.active_core_ratio_64th
-    //Max index 11 represents the index format to 0xFFFF
-    //if we vratio_index_format is greater than 0xFFFF,
-    // then we need to clip to 0xFFFF.
-    if (G_pgpe_pstate.vratio_index_format > 0xFFFF )
-    {
-        G_pgpe_pstate.vratio_index_format = 0xFFFF;
-    }
-
-    PK_TRACE_INF("PSS: vratio_index_format=0x%08x", G_pgpe_pstate.vratio_index_format);
-    G_pgpe_pstate.active_core_ratio_64th    = G_pgpe_pstate.vratio_index_format >> 10; //Index format back to 64ths
 
     G_pgpe_pstate.vratio_vdd_snapup_64th    = ((vratio_vdd_accum_64th + 63) /
             (G_pgpe_pstate.vratio_core_count));

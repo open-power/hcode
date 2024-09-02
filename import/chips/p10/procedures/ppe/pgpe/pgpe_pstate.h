@@ -101,33 +101,32 @@ typedef struct pgpe_pstate
     pmsr_t   pmsr;                      //40-47
     VRT_t*   vrt;                       //48-55
     uint32_t stopped_ac_vdd_64ths, stopped_ac_vcs_64ths;            //56-57
-    uint32_t active_core_ratio_64th, vratio_index_format,           //58-59
-             vratio_vdd_snapup_64th, vratio_vcs_snapup_64th,        //60-61
-             vratio_vdd_rounded_64th, vratio_vcs_rounded_64th,      //62-63
-             vratio_vdd_loadline_64th, vratio_vdd_ceff_inst_64th,   //64-65
-             vratio_vcs_loadline_64th, vratio_vcs_ceff_ins_64th,    //66-67
-             vratio_vdd_rounded, vratio_vcs_rounded;                //68-69
-    uint32_t vindex;                                                //70
-    uint32_t pstate_ceiling;        //71
-    uint32_t eco_core_count;        //72
-    uint32_t voltage_step_trace_cnt;//73
-    uint32_t vratio_core_count;     //74
-    uint32_t throttle_pmcr, throttle_clip, throttle_vrt;
-    uint32_t throttle_target, throttle_curr, throttle_pending;
-    pgpe_profile_t fit_prof; //78
-    pgpe_profile_t step_prof; //82
-    pgpe_profile_t dds_prof_cmp; //86
-    pgpe_profile_t dds_prof_pre; //90
-    pgpe_profile_t dds_prof_post; //94
-    pgpe_profile_t resclk_prof; //98
-    uint32_t marker; //99
-    uint32_t start_ttsr_cnt;  //100
-    uint64_t start_ttsr;   //101
-    uint32_t spare_core_count; //102
-    uint32_t active_core_accum_64th;
-    uint32_t vratio_vdd_accum_64th;
-    uint32_t clock_off_accum_64th;
-    uint32_t corecache_off_accum_64th;
+    uint32_t vratio_vdd_snapup_64th, vratio_vcs_snapup_64th,        //58-59
+             vratio_vdd_rounded_64th, vratio_vcs_rounded_64th,      //60-61
+             vratio_vdd_loadline_64th, vratio_vdd_ceff_inst_64th,   //62-63
+             vratio_vcs_loadline_64th, vratio_vcs_ceff_ins_64th,    //64-65
+             vratio_vdd_rounded, vratio_vcs_rounded;                //66-67
+    uint32_t vindex;                                                //68
+    uint32_t pstate_ceiling;        //69
+    uint32_t eco_core_count;        //70
+    uint32_t voltage_step_trace_cnt;//71
+    uint32_t vratio_core_count;     //72
+    uint32_t throttle_pmcr, throttle_clip, throttle_vrt;      //73,74,75
+    uint32_t throttle_target, throttle_curr, throttle_pending; //76,77,78
+    pgpe_profile_t fit_prof; //79
+    pgpe_profile_t step_prof; //83
+    pgpe_profile_t dds_prof_cmp; //87
+    pgpe_profile_t dds_prof_pre; //91
+    pgpe_profile_t dds_prof_post; //95
+    pgpe_profile_t resclk_prof; //99
+    uint32_t marker; //103
+    uint32_t start_ttsr_cnt;  //104
+    uint64_t start_ttsr;   //105
+    uint32_t spare_core_count; //106
+    uint32_t active_core_accum_64th; //107
+    uint32_t vratio_vdd_accum_64th; //108
+    uint32_t clock_off_accum_64th; //109
+    uint32_t corecache_off_accum_64th; //110
 } pgpe_pstate_t;
 
 
