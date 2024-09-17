@@ -622,11 +622,14 @@ void pgpe_wov_ocs_dec_tgt_pct()
 
     if (pgpe_wov_ocs_is_wov_underv_enabled())
     {
+#ifndef __PPE_PGPE
+
         if (pgpe_gppb_get_wov_underv_extended_max_pct())
         {
             min_pct = -pgpe_gppb_get_wov_underv_extended_max_pct();
         }
         else
+#endif
         {
             min_pct = -pgpe_gppb_get_wov_underv_max_pct();
         }
