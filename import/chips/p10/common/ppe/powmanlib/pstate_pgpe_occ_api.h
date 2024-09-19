@@ -43,6 +43,7 @@ extern "C" {
 #endif
 
 #define HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2      0x4F505332 //OPS2
+#define HCODE_OCC_SHARED_MAGIC_NUMBER_CH        0x4348 //CH
 
 //---------------
 // IPC from 405

@@ -44,7 +44,6 @@ const uint32_t FDIR_MC_WCLR = 0x6E0EFE47;
 const uint32_t FDIR_MC_WOR  = 0x6E0EFE46;
 
 uint32_t    g_call_home_mma_on_avg_accum_8ths;
-uint32_t    g_call_home_tick_count;
 
 extern XgpeHeader_t* G_xgpe_header_data;
 uint32_t G_throttleOn = 0;
@@ -83,6 +82,11 @@ void xgpe_irq_fit_init()
     occ_shared_data->pstate_table_offset = offsetof(HcodeOCCSharedData_t, pstate_table);
     occ_shared_data->iddq_activity_sample_depth = IDDQ_FIT_SAMPLE_TICKS;
     occ_shared_data->call_home_offset = offsetof(HcodeOCCSharedData_t, call_home);
+    occ_shared_data->call_home.dw0.fields.magic = HCODE_OCC_SHARED_MAGIC_NUMBER_CH;
+    occ_shared_data->call_home.dw0.fields.version = 0;
+    occ_shared_data->call_home.dw0.fields.length = sizeof(call_home_t);
+
+
 
     G_iddq.p_act_val =  (iddq_activity_t*)(G_xgpe_header_data->g_xgpe_sharedSramAddress +
                                            occ_shared_data->iddq_data_offset);
@@ -632,21 +636,17 @@ void handle_wof_iddq_values()
         //G_iddq.vratio_vdd_accum = 0;
         //G_iddq.vratio_vcs_accum = 0;
         G_iddq.tick_cnt = 0;
+        g_call_home_mma_on_avg_accum_8ths = mma_on_avg_8ths;
     }
 
-    g_call_home_mma_on_avg_accum_8ths += mma_on_avg_8ths;
-    g_call_home_tick_count++;
 
     if ( G_call_home->dw0.fields.call_home_read  && active_core_cnt)
     {
-        uint32_t call_home_mma_on_avg_8ths = g_call_home_mma_on_avg_accum_8ths / g_call_home_tick_count;
         uint16_t mma_on_avg_pct =
-            (uint16_t)(((call_home_mma_on_avg_8ths * 100) + 4 / active_core_cnt));
+            (uint16_t)((((g_call_home_mma_on_avg_accum_8ths * 100) + 4) / IDDQ_FIT_SAMPLE_TICKS));
 
         G_call_home->dw1.fields.mma_on_avg_pct = mma_on_avg_pct;
 
-        g_call_home_mma_on_avg_accum_8ths = 0;
-        g_call_home_tick_count = 0;
         G_call_home->dw0.fields.call_home_read = 0;
     }
 
