@@ -69,7 +69,7 @@ void xgpe_irq_fit_init()
     HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)G_xgpe_header_data->g_xgpe_sharedSramAddress;
     uint32_t c;
 
-    occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
+    occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS3;
     occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
     occ_shared_data->occ_data_length = sizeof(occ_wof_values_t);
     occ_shared_data->pgpe_data_offset = offsetof(HcodeOCCSharedData_t, pgpe_wof_values);

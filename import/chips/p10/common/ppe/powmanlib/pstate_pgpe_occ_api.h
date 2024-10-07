@@ -42,8 +42,8 @@
 extern "C" {
 #endif
 
-#define HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2      0x4F505332 //OPS2
 #define HCODE_OCC_SHARED_MAGIC_NUMBER_CH        0x4348 //CH
+#define HCODE_OCC_SHARED_MAGIC_NUMBER_OPS3      0x4F505333 //OPS3
 
 //---------------
 // IPC from 405
@@ -224,6 +224,14 @@ typedef struct
 
 typedef struct
 {
+    uint8_t       occ_value_version;  //version update
+    uint8_t       max_core_temp_degC; //Maximum value core temp as computed by occ
+    uint8_t       core_temp_degC[32]; //Array of core temp updated by occ for every wof tick
+    uint8_t       reserved[30];
+} occ_wof_values_t;
+
+typedef struct
+{
     union
     {
         uint64_t value;
@@ -342,22 +350,6 @@ typedef union
     } fields;
 } xgpe_wof_values_t;
 
-typedef union
-{
-    uint64_t value;
-    struct
-    {
-        uint32_t high_order;
-        uint32_t low_order;
-    } words;
-    struct
-    {
-        uint64_t sibling_base_frequency         : 16;
-        uint64_t reserved0                      : 8;
-        uint64_t sibling_pstate                 : 8;
-        uint64_t reserved1                      : 32;
-    } fields;
-} occ_wof_values_t;
 
 enum ACT_CNT_IDX
 {

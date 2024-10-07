@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,7 +75,7 @@ void pgpe_occ_init()
         HcodeOCCSharedData_t* occ_shared_data = (HcodeOCCSharedData_t*)
                                                 (pgpe_header_get(g_pgpe_sharedSramAddress));
 
-        occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS2;
+        occ_shared_data->magic = HCODE_OCC_SHARED_MAGIC_NUMBER_OPS3;
         occ_shared_data->occ_data_offset = offsetof(HcodeOCCSharedData_t, occ_wof_values);
         occ_shared_data->occ_data_length = sizeof(occ_wof_values_t);
         occ_shared_data->pgpe_data_offset = offsetof(HcodeOCCSharedData_t, pgpe_wof_values);
