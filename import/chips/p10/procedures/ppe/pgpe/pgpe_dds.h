@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2022                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,5 +75,8 @@ void pgpe_dds_compute(uint32_t pstate);
 void pgpe_dds_update_pre(uint32_t pstate);
 void pgpe_dds_update_post(uint32_t pstate);
 void pgpe_dds_poll_done();
+
+//DDS trip adjust based on the core temparatures
+void pgpe_dds_trip_adjust();
 
 #endif

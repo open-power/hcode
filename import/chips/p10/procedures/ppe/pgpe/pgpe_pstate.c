@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -2059,6 +2059,7 @@ void pgpe_pstate_update_vdd_vcs_ps()
     G_pgpe_pstate.vcs_curr_uplift = G_pgpe_pstate.vcs_next_uplift;
     G_pgpe_pstate.vcs_curr_ext = G_pgpe_pstate.vcs_next_ext;
     G_pgpe_pstate.pstate_curr = G_pgpe_pstate.pstate_next;
+    G_pgpe_pstate.cur_freq_in_mhz = pgpe_pstate_freq_from_ps(G_pgpe_pstate.pstate_curr);
 
     uint32_t occs2  =  (G_pgpe_pstate.vdd_curr_ext << 16) | G_pgpe_pstate.vcs_curr_ext;
     out32(TP_TPCHIP_OCC_OCI_OCB_OCCS2_RW, occs2);

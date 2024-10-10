@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -26,6 +26,7 @@
 #include "pgpe_irq_handlers.h"
 #include "pgpe_gppb.h"
 #include "pgpe_header.h"
+#include "pgpe_dds.h"
 #include "pgpe_pstate.h"
 #include "pgpe_occ.h"
 #include "pgpe_wov_ocs.h"
@@ -147,6 +148,12 @@ __attribute__((always_inline)) inline void handle_occflg_requests()
 }
 
 
+__attribute__((always_inline)) inline void handle_core_temperature()
+{
+    pgpe_dds_trip_adjust();
+}
+
+
 __attribute__((always_inline)) inline void handle_produce_wof()
 {
     pgpe_occ_produce_wof_values();
@@ -174,7 +181,12 @@ void pgpe_irq_fit_handler()
     if (pgpe_wov_ocs_is_ocs_enabled() || pgpe_wov_ocs_is_wov_underv_enabled() || pgpe_wov_ocs_is_wov_overv_enabled())
     {
         handle_wov_ocs();
+    }
 
+    //Need to check the pstate
+    if (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_DDS_CALIBRATION_ENABLE))
+    {
+        handle_core_temperature();
     }
 
     pgpe_pstate_profile(&G_pgpe_pstate.fit_prof, start_time);

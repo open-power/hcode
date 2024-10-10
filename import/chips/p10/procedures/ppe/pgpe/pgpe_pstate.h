@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -127,6 +127,8 @@ typedef struct pgpe_pstate
     uint32_t vratio_vdd_accum_64th; //108
     uint32_t clock_off_accum_64th; //109
     uint32_t corecache_off_accum_64th; //110
+    occ_wof_values_t* occ_wof_values;
+    uint32_t cur_freq_in_mhz;
 } pgpe_pstate_t;
 
 

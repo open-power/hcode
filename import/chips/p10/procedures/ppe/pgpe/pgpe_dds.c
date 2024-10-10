@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -45,6 +45,8 @@ inline uint32_t pgpe_dds_intp_ins_delay_from_ps(uint32_t ps, uint32_t c, uint32_
 inline uint32_t pgpe_dds_intp_cal_adj_from_ps(uint32_t ps, uint32_t c);
 inline uint32_t pgpe_dds_intp_trip(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta);
 inline uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c, uint32_t r, uint32_t ps_delta);
+inline void pgpe_dds_core_trip_adjust();
+inline void pgpe_dds_chip_trip_adjust();
 
 void* pgpe_dds_data_addr()
 {
@@ -689,4 +691,88 @@ inline uint32_t pgpe_dds_intp_large(uint32_t ps, uint32_t c, uint32_t r, uint32_
     PK_TRACE_DBG("DDS: Intp Large c=%u, r=0x%x, large=0x%x base_large=0x%x", c, r, large, pgpe_gppb_get_dds_large(c, r));
 
     return large;
+}
+
+#define CORE_TEMPERATURE_75C  75
+#define CORE_TEMPERATURE_85C  85
+#define CORE_TEMPERATURE_95C  95
+#define FREQUENCY_ALLOWED_FOR_TRIP_ADJ 4100
+
+void pgpe_dds_trip_adjust()
+{
+    if ( G_pgpe_pstate.occ_wof_values->occ_value_version  &&
+         G_pgpe_pstate.cur_freq_in_mhz > FREQUENCY_ALLOWED_FOR_TRIP_ADJ)
+    {
+        if (pgpe_gppb_get_dds_trip_mode() == DDS_TRIP_MODE_CHIP)
+        {
+            pgpe_dds_chip_trip_adjust();
+        }
+        else
+        {
+            pgpe_dds_core_trip_adjust();
+        }
+    }
+}
+
+inline void pgpe_dds_chip_trip_adjust()
+{
+    pgpe_dds_t dds;
+    dds.fdcr_chip.value = 0;
+    uint32_t l_max_core_temp_degC = G_pgpe_pstate.occ_wof_values->max_core_temp_degC;
+    dds.fdcr_chip.fields.trip_offset = G_pgpe_dds.other_chip[PGPE_DDS_OTHER_TRIP_IDX];
+
+    if (l_max_core_temp_degC >= CORE_TEMPERATURE_75C &&
+        l_max_core_temp_degC < CORE_TEMPERATURE_85C)
+    {
+        dds.fdcr_chip.fields.trip_offset += 1;
+    }
+    else if (l_max_core_temp_degC >= CORE_TEMPERATURE_85C &&
+             l_max_core_temp_degC < CORE_TEMPERATURE_95C)
+    {
+        dds.fdcr_chip.fields.trip_offset += 2;
+    }
+    else if (l_max_core_temp_degC >= CORE_TEMPERATURE_95C )
+    {
+        dds.fdcr_chip.fields.trip_offset += 3;
+    }
+
+    PPE_PUTSCOM(PPE_SCOM_ADDR_MC_WR(CPMS_FDCR_SCOM2, 0xF), dds.fdcr_chip.value);
+}
+
+inline void pgpe_dds_core_trip_adjust()
+{
+    pgpe_dds_t dds;
+    uint32_t q, c;
+    uint32_t l_core_temp_degC = 0;
+
+    for (q = 0; q < MAX_QUADS; q++)
+    {
+        for (c = 0; c < CORES_PER_QUAD; c++)
+        {
+            if (G_pgpe_dds.core_mask & CORE_MASK(((q << 2) + c)))
+            {
+                dds.fdcr[q][c].value = 0;
+                l_core_temp_degC = G_pgpe_pstate.occ_wof_values->core_temp_degC[c];
+                dds.fdcr[q][c].fields.trip_offset = G_pgpe_dds.other[PGPE_DDS_OTHER_TRIP_IDX][q][c];
+
+                if (l_core_temp_degC >= CORE_TEMPERATURE_75C &&
+                    l_core_temp_degC < CORE_TEMPERATURE_85C)
+                {
+                    dds.fdcr[q][c].fields.trip_offset += 1;
+                }
+                else if (l_core_temp_degC >= CORE_TEMPERATURE_85C &&
+                         l_core_temp_degC < CORE_TEMPERATURE_95C)
+                {
+                    dds.fdcr[q][c].fields.trip_offset += 2;
+                }
+                else if (l_core_temp_degC >= CORE_TEMPERATURE_95C )
+                {
+                    dds.fdcr[q][c].fields.trip_offset += 3;
+                }
+
+                //Unicast write FDCR[c]
+                PPE_PUTSCOM(PPE_SCOM_ADDR_UC(CPMS_FDCR_SCOM2, q, (0x8 >> c)), dds.fdcr[q][c].value);
+            }
+        }
+    }
 }

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2021                                                    */
+/* COPYRIGHT 2016,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -59,6 +59,8 @@ void pgpe_header_init()
     //OCC Shared SRAM address and length
     G_pgpe_header_data->g_pgpe_sharedSramAddress = (uint32_t)OCC_SHARED_SRAM_ADDR_START;
     G_pgpe_header_data->g_pgpe_sharedLength = PGPE_OCC_SHARED_SRAM_SIZE;
+    G_pgpe_pstate.occ_wof_values = (occ_wof_values_t*)(G_pgpe_header_data->g_pgpe_sharedSramAddress +
+                                   occ_shared_data->occ_data_offset);
 
     //Clear out the OCC Shared SRAM region by setting everything to zero
     uint32_t occflg3 = in32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG3_RW);
