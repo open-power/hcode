@@ -221,8 +221,10 @@ void compute_io_power()
             G_static_powr_mw = 0;
         }
 
-        if(static_lnk_cntlr->io_magic ==
-           0x53540000) //ST
+        if((static_lnk_cntlr->io_magic ==
+            0x53540000) ||
+           (static_lnk_cntlr->io_magic ==
+            0x53540001)) //ST
         {
             io_pgated_cntrlr = static_lnk_cntlr->io_pwr_gated_cntrlrs;
             io_disable_lnks  = static_lnk_cntlr->io_disable_links;
