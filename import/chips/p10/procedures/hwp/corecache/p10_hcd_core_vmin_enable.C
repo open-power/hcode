@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -86,12 +86,14 @@ fapi2::ReturnCode
 p10_hcd_core_vmin_enable(
     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > & i_target)
 {
+#ifndef RVRM_DISABLE
     fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > l_eq_target =
         i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
     fapi2::buffer<buffer_t> l_mmioData = 0;
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
     uint32_t                l_vdd_pfet_enable_actual = 0;
+#endif
     uint8_t                 l_attr_mma_poweron_disable = 0;
     uint8_t                 l_attr_mma_poweroff_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
@@ -120,6 +122,7 @@ p10_hcd_core_vmin_enable(
         FAPI_TRY( p10_hcd_mma_poweroff( i_target ) );
     }
 
+#ifndef RVRM_DISABLE
     FAPI_TRY(HCD_GETMMIO_Q( l_eq_target, QME_FLAGS_RW, l_mmioData ) );
 
     if( MMIO_GET( QME_FLAGS_RVRM_ENABLE ) == 1 )
@@ -224,6 +227,8 @@ p10_hcd_core_vmin_enable(
                      set_CORE_SELECT, i_target.getCoreSelect(),
                      "ERROR: Vmin Enable Rvid Active/Enabled Timeout");
     }
+
+#endif
 
 fapi_try_exit:
 

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2021                                                    */
+/* COPYRIGHT 2018,2024                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -91,11 +91,13 @@ fapi2::ReturnCode
 p10_hcd_core_vmin_disable(
     const fapi2::Target < fapi2::TARGET_TYPE_CORE | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > & i_target)
 {
+#ifndef RVRM_DISABLE
     fapi2::Target < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST, fapi2::MULTICAST_AND > l_eq_target =
         i_target.getParent < fapi2::TARGET_TYPE_EQ | fapi2::TARGET_TYPE_MULTICAST > ();
     fapi2::buffer<buffer_t> l_mmioData = 0;
     fapi2::buffer<uint64_t> l_scomData = 0;
     uint32_t                l_timeout  = 0;
+#endif
     uint8_t                 l_attr_mma_poweroff_disable = 0;
     uint8_t                 l_attr_mma_poweron_disable = 0;
     fapi2::Target < fapi2::TARGET_TYPE_SYSTEM > l_sys;
@@ -106,6 +108,7 @@ p10_hcd_core_vmin_disable(
 
     FAPI_INF(">>p10_hcd_core_vmin_disable");
 
+#ifndef RVRM_DISABLE
     FAPI_TRY(HCD_GETMMIO_Q( l_eq_target, QME_FLAGS_RW, l_mmioData ) );
 
     if( MMIO_GET( QME_FLAGS_RVRM_ENABLE ) == 1 )
@@ -281,6 +284,8 @@ p10_hcd_core_vmin_disable(
         FAPI_DBG("Reset VDD_PFET_SEQ_STATE to No-Op(0b00) via CPMS_CL2_PFETCNTL[0-1]");
         FAPI_TRY( HCD_PUTMMIO_S( i_target, CPMS_CL2_PFETCNTL_WO_CLEAR,  BITS64(0, 2)) );
     }
+
+#endif
 
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWEROFF_DISABLE, l_sys,  l_attr_mma_poweroff_disable ) );
     FAPI_TRY( FAPI_ATTR_GET( fapi2::ATTR_SYSTEM_MMA_POWERON_DISABLE,  l_sys,  l_attr_mma_poweron_disable  ) );
