@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2020
+# COPYRIGHT 2020,2024
 # [+] International Business Machines Corp.
 #
 #
@@ -110,11 +110,11 @@ foreach my $line (@input_lines)
     my $fw_a = 0;
     my $fw_b = 0;
     my $fw_c = 0;
-    if ($fw_str =~ /(\d+)\.(\d+)[\.\_](\d+)/)
+    if ($fw_str =~ /(\d+)\.(\d+)[\.\_](\S+)/)
     {
       $fw_a = $1;
       $fw_b = $2;
-      $fw_c = $3;
+      $fw_c = hex($3);
     }
     elsif ($fw_str =~ /(\d+)\.(\d+)/)
     {
