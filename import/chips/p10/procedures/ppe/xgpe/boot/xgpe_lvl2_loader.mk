@@ -36,6 +36,7 @@ $(IMAGE)_TARGET=PPE
 
 ## PPE_TYPE can be std or gpe
 _PPE_TYPE=gpe
+$(IMAGE)_COMMONFLAGS+= -D__IOTA__
 
 $(IMAGE)_LINK_SCRIPT=linkloader.cmd
 

@@ -26,6 +26,7 @@
 EXE=pgpeImgEdit
 
 $(EXE)_COMMONFLAGS+= -D__PPE_PLAT
+$(EXE)_COMMONFLAGS+= -D__IOTA__
 
 $(call ADD_EXE_INCDIR, $(EXE), \
    $(PGPE_SRCDIR) \
