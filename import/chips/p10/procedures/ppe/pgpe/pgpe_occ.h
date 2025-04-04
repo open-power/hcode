@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2023                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -61,6 +61,7 @@ typedef struct pgpe_occ
     uint32_t current_info_log_cnt;
     uint32_t ceffratio_info_log_cnt;
     uint32_t idd_current_scaling_factor;
+    uint32_t idn_ma, idn_tb_accum, idn_fit_avg_ma, idn_wof_avg_accum_ma;
 } pgpe_occ_t;
 
 extern pgpe_occ_t G_pgpe_occ;

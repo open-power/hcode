@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -165,6 +165,8 @@ void pgpe_occ_produce_wof_values()
                     G_pgpe_occ.wof_tick;;
             G_pgpe_occ.pwof_val->dw1.fields.ics_avg_10ma = (G_pgpe_occ.ics_wof_avg_accum_ma + G_pgpe_occ.wof_tick_rnd) /
                     G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw1.fields.idn_avg_10ma =  (G_pgpe_occ.idn_wof_avg_accum_ma  + G_pgpe_occ.wof_tick_rnd) /
+                    G_pgpe_occ.wof_tick;;
             G_pgpe_occ.pwof_val->dw3.fields.ocs_avg_0p01pct = (G_pgpe_occ.ocs_avg_pct_wof_accum + G_pgpe_occ.wof_tick_rnd) /
                     G_pgpe_occ.wof_tick;
 
@@ -179,6 +181,7 @@ void pgpe_occ_produce_wof_values()
             }
 
             G_pgpe_occ.idd_wof_avg_accum_ma = 0;
+            G_pgpe_occ.idn_wof_avg_accum_ma = 0;
             G_pgpe_occ.ics_wof_avg_accum_ma = 0;
             G_pgpe_occ.ocs_avg_pct_wof_accum = 0;
 
@@ -278,11 +281,14 @@ void pgpe_occ_produce_fit_values()
     {
         G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
         G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.idn_fit_avg_ma = G_pgpe_occ.idn_tb_accum / G_pgpe_occ.max_tb_delta;
         G_pgpe_occ.ocs_avg_pct_fit =  G_pgpe_occ.ocs_avg_pct_tb_accum;
         G_pgpe_occ.idd_wof_avg_accum_ma += G_pgpe_occ.idd_fit_avg_ma;
         G_pgpe_occ.ics_wof_avg_accum_ma += G_pgpe_occ.ics_fit_avg_ma;
+        G_pgpe_occ.idn_wof_avg_accum_ma += G_pgpe_occ.idn_fit_avg_ma;
         G_pgpe_occ.ocs_avg_pct_wof_accum += G_pgpe_occ.ocs_avg_pct_fit;
         G_pgpe_occ.idd_tb_accum = 0;
+        G_pgpe_occ.idn_tb_accum = 0;
         G_pgpe_occ.ics_tb_accum = 0;
         G_pgpe_occ.ocs_avg_pct_tb_accum = 0;
 
@@ -373,7 +379,7 @@ void pgpe_occ_sample_values()
         G_pgpe_occ.init_tb = 1;
     }
 
-    //Read IDD and ICS
+    //Read IDD,ICS and IDN
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {
@@ -386,10 +392,20 @@ void pgpe_occ_sample_values()
                                  &G_pgpe_occ.ics_ma,
                                  CURRENT_SCALE_IDX_VCS);
 
+        pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(),
+                                 pgpe_gppb_get_avs_bus_topology_vdn_avsbus_rail(),
+                                 &G_pgpe_occ.idn_ma,
+                                 CURRENT_SCALE_IDX_VDN);
+
         //PK_TRACE("OCC: idd_ma=%u, ics_ma=%u, delta_tb=%u",G_pgpe_occ.idd_ma, G_pgpe_occ.ics_ma, delta_tb);
         if ( G_pgpe_occ.idd_ma )
         {
             G_pgpe_occ.idd_tb_accum = G_pgpe_occ.idd_ma * delta_tb;
+        }
+
+        if ( G_pgpe_occ.idn_ma )
+        {
+            G_pgpe_occ.idn_tb_accum = G_pgpe_occ.idn_ma * delta_tb;
         }
 
         if ( G_pgpe_occ.ics_ma )
