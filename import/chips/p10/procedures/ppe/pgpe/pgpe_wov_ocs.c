@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -34,6 +34,10 @@
 #include "pgpe_occ.h"
 #include "pgpe_pstate.h"
 #include "pgpe_error.h"
+
+#define OVER_VOLT_HIT   0
+#define CUR_ABV_RDP_LMT 1
+#define HEAVY_DROOP     2
 
 pgpe_wov_ocs_t G_pgpe_wov_ocs __attribute__((section (".data_structs")));
 void pgpe_wov_ocs_dec_tgt_pct();
@@ -238,6 +242,7 @@ void pgpe_wov_ocs_update_dirty()
     uint32_t droop;
     uint32_t overcurrent;
     uint32_t dirty;
+    G_pgpe_wov_ocs.pwof_val->dw4.fields.dirty_current_10ma = 0;
 
     if (G_pgpe_wov_ocs.heavy_loss)
     {
@@ -273,10 +278,14 @@ void pgpe_wov_ocs_update_dirty()
     overcurrent = OCS_UNDER_THRESH;
 #ifdef __PPE_PGPE
 
+    out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_CLEAR,
+          BIT32(CUR_ABV_RDP_LMT) | BIT32(HEAVY_DROOP) | BIT32(OVER_VOLT_HIT));
+
     //Check for overrcurrent status
     if(pgpe_occ_get(idd_ocs_running_avg) >= G_pgpe_wov_ocs.idd_current_thresh)
     {
         overcurrent = OCS_OVER_THRESH;
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(CUR_ABV_RDP_LMT));
     }
 
     //Trace if change in overcurrent status
@@ -435,6 +444,8 @@ void pgpe_wov_ocs_update_dirty()
     }
     else if (droop == DROOP_LVL_HEAVY)
     {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(HEAVY_DROOP));
+
         if (overcurrent == OCS_OVER_THRESH)
         {
 #ifdef __PPE_PGPE
@@ -567,6 +578,7 @@ void pgpe_wov_ocs_update_dirty()
     if (G_pgpe_wov_ocs.tgt_pct >= pgpe_gppb_get_wov_overv_max_pct() &&
         pgpe_gppb_get_wov_overv_max_pct())
     {
+        out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(OVER_VOLT_HIT));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY));
         out32(TP_TPCHIP_OCC_OCI_OCB_OCCFLG0_WO_OR, BIT32(PGPE_SAMPLE_DIRTY_TYPE));
         dirty = OCS_DIRTY_SAMPLE_TYPE_11;
