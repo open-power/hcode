@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -96,10 +96,13 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 #define pgpe_gppb_get_ops_vcs(pt_set, idx) G_gppb_operating_points_set[pt_set][idx].vcs_mv
 
 
+#define pgpe_gppb_get_ops_idd_tdp_ac(pt_set, idx)  (G_gppb_operating_points_set[pt_set][idx].idd_tdp_ac_10ma)
 
 #define pgpe_gppb_get_ops_idd_ac(pt_set, idx) (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
     (G_gppb_operating_points_set[pt_set][idx].idd_rdp_ac_10ma) : \
     (G_gppb_operating_points_set[pt_set][idx].idd_tdp_ac_10ma)
+
+#define pgpe_gppb_get_ops_idd_tdp_dc(pt_set, idx) (G_gppb_operating_points_set[pt_set][idx].idd_tdp_dc_10ma)
 
 #define pgpe_gppb_get_ops_idd_dc(pt_set, idx) (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
     (G_gppb_operating_points_set[pt_set][idx].idd_rdp_dc_10ma) : \
@@ -111,6 +114,11 @@ void pgpe_gppb_set_pgpe_flags_disable(uint32_t x);
 
 #define pgpe_gppb_get_psv_slope(rail, pt_set, region) G_gppb_poundv_slopes->ps_voltage_slopes[rail][pt_set][region]
 #define pgpe_gppb_get_vps_slope(rail, pt_set, region)  G_gppb_poundv_slopes->voltage_ps_slopes[rail][pt_set][region]
+
+#define pgpe_gppb_get_ps_iac_tdp_slope(rail, pt_set, region)  (G_gppb_poundv_slopes->ps_ac_current_tdp[rail][pt_set][region])
+
+#define pgpe_gppb_get_ps_idc_tdp_slope(rail, pt_set, region)   (G_gppb_poundv_slopes->ps_dc_current_tdp[rail][pt_set][region])
+
 
 #define pgpe_gppb_get_ps_iac_slope(rail, pt_set, region)  (pgpe_gppb_get_pgpe_flags(PGPE_FLAG_USE_RDP)) ? \
                                    (G_gppb_poundv_slopes->ps_ac_current_rdp[rail][pt_set][region]) : \

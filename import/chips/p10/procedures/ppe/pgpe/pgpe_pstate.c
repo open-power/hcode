@@ -515,6 +515,7 @@ void pgpe_pstate_actuate_step()
     pk_critical_section_exit(&ctx);
     G_pgpe_pstate.voltage_step_trace_cnt = 0;
 
+
     //compute vcs_next
     G_pgpe_pstate.vcs_next = pgpe_pstate_intp_vcs_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
 
@@ -1296,17 +1297,26 @@ uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 
 uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vdd)
 {
+    uint32_t load_loss_uplift = pgpe_gppb_get_vdd_sysparm_loadline() + pgpe_gppb_get_vdd_sysparm_distloss();
     //interpolate new current(AC and DC) based on pstate next
     uint32_t idd_ac_10ma = pgpe_pstate_intp_idd_ac_from_ps(ps, vpd_pt_set);
     uint32_t idd_dc_10ma = pgpe_pstate_intp_idd_dc_from_ps(ps, vpd_pt_set);
 
     G_pgpe_pstate.idd = idd_ac_10ma + idd_dc_10ma;
 
-    //compute load line drop
-    uint32_t vdd_uplift_mv = (((G_pgpe_pstate.idd * vratio_vdd) * (pgpe_gppb_get_vdd_sysparm_loadline() +
-                               pgpe_gppb_get_vdd_sysparm_distloss())) / 100
-                              + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
+    uint32_t idd_tdp_ac_10ma = pgpe_pstate_intp_idd_tdp_ac_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
+    uint32_t idd_tdp_dc_10ma = pgpe_pstate_intp_idd_tdp_dc_from_ps(G_pgpe_pstate.pstate_next, VPD_PT_SET_BIASED);
+    G_pgpe_pstate.idd_tdp = idd_tdp_ac_10ma + idd_tdp_dc_10ma;
 
+
+
+    uint32_t idd_vdd = G_pgpe_pstate.idd * vratio_vdd;
+
+    uint32_t mult_idd_loss = (idd_vdd * load_loss_uplift) / 100;;
+
+    //compute load line drop
+
+    uint32_t vdd_uplift_mv = (mult_idd_loss + pgpe_gppb_get_vdd_sysparm_distoffset()) / 1000;
 
     PK_TRACE_DBG("PSSX: ps=0x%x, idd_ac_10ma=%d , idd_dc_10ma=%d, vdd_up_mv=%u", ps, idd_ac_10ma, idd_dc_10ma,
                  vdd_uplift_mv / 64);
@@ -1328,6 +1338,56 @@ uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32
 
     PK_TRACE_DBG("PSS: ps=0x%x, ics_ac=0x%x, ics_dc=0x%x, vcs_up=0x%x", ps, ics_ac, ics_dc, vcs_uplift);
     return vcs_uplift;
+}
+
+uint32_t pgpe_pstate_intp_idd_tdp_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
+{
+    uint32_t idd_ac;
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
+
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     I_SLOPE_FP_SHIFT_9;
+
+    uint32_t slope  = (pgpe_gppb_get_ps_iac_tdp_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
+
+    idd_ac = compute_ivfs_slope_uplift(pgpe_gppb_get_ps_iac_tdp_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                                       slope, (((pgpe_gppb_get_ops_idd_tdp_ac(vpd_pt_set, r)) << 1) + 1), 0);
+
+
+
+    PK_TRACE_INF("PS: ps=0x%x, r=%u, idd_ac=0x%x", ps, r, idd_ac);
+    /*    PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_ac=0x%x", pgpe_gppb_get_ps_iac_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                 pgpe_gppb_get_ops_ps(vpd_pt_set, r),
+                 pgpe_gppb_get_ops_idd_ac(vpd_pt_set, r));*/
+
+
+    return idd_ac;
+}
+uint32_t pgpe_pstate_intp_idd_tdp_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
+{
+    uint32_t idd_dc;
+    uint32_t r     = pgpe_pstate_get_ps_region(ps, vpd_pt_set);
+    uint32_t pstate =  pgpe_gppb_get_ops_ps(vpd_pt_set, r) - ps;
+
+    uint32_t shift = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_SLOPE_FIX_8_8) ? VID_SLOPE_FP_SHIFT_8 :
+                     I_SLOPE_FP_SHIFT_9;
+
+    uint32_t slope  = (pgpe_gppb_get_ps_idc_tdp_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r) * pstate) >>
+                      (shift - 1);
+
+    idd_dc = compute_ivfs_slope_uplift(pgpe_gppb_get_ps_idc_tdp_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                                       slope, (((pgpe_gppb_get_ops_idd_tdp_dc(vpd_pt_set, r) << 1)) + 1), 0);
+
+
+
+    PK_TRACE("PS: ps=0x%x, r=%u, idd_dc=0x%x", ps, r, idd_dc);
+    /*    PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_dc=0x%x", pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
+                 pgpe_gppb_get_ops_ps(vpd_pt_set, r),
+                 pgpe_gppb_get_ops_idd_dc(vpd_pt_set, r));*/
+
+    return idd_dc;
 }
 
 uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
@@ -1356,6 +1416,9 @@ uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set)
     return idd_ac;
 }
 
+
+
+
 uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 {
     uint32_t idd_dc;
@@ -1373,7 +1436,7 @@ uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set)
 
 
 
-    PK_TRACE("PS: ps=0x%x, r=%u, idd_dc=0x%x", ps, r, idd_dc);
+    PK_TRACE_INF("PS: ps=0x%x, r=%u, idd_dc=0x%x", ps, r, idd_dc);
     /*    PK_TRACE("PS: slope=0x%x,ps=0x%x,idd_dc=0x%x", pgpe_gppb_get_ps_idc_slope(RUNTIME_RAIL_IDD, vpd_pt_set, r),
                  pgpe_gppb_get_ops_ps(vpd_pt_set, r),
                  pgpe_gppb_get_ops_idd_dc(vpd_pt_set, r));*/

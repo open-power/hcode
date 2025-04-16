@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -123,38 +123,38 @@ typedef struct pgpe_avsbus_usr_dtls
 #define IDD_MIN_CAPTURE_SIZE 16
 typedef struct pgpe_avsbus
 {
-    uint32_t voltage_zero_cnt;
-    uint32_t current_zero_cnt;
+    uint32_t voltage_zero_cnt;  //0
+    uint32_t current_zero_cnt;  //4
 
-    uint16_t idd_current_thrshd_10ma;
-    uint16_t idd_current_rollover_10ma;
-    uint16_t occ_cyc_time_ps;
-    uint16_t idd_max_current_10ma;
+    uint16_t idd_current_thrshd_10ma; //6
+    uint16_t idd_current_rollover_10ma; //8
+    uint16_t occ_cyc_time_ps; //10
+    uint16_t idd_max_current_10ma; //12
 
-    uint32_t timebase_tick_ns;
-    uint16_t start_dly_ns[2];           // 0: VDD; 1: VCS
+    uint32_t timebase_tick_ns; //16
+    uint16_t start_dly_ns[2];  //20         // 0: VDD; 1: VCS
 
-    uint16_t stabl_dly_ns[2];
-    uint16_t incr_dly_uv_per_us[2];     // Put in Scoreboard for easy access
+    uint16_t stabl_dly_ns[2]; //24
+    uint16_t incr_dly_uv_per_us[2]; //28     // Put in Scoreboard for easy access
 
-    uint16_t decr_dly_uv_per_us[2];     // Put in Scoreboard for easy access
-    uint16_t start_dly_tb[2];
+    uint16_t decr_dly_uv_per_us[2];  //32   // Put in Scoreboard for easy access
+    uint16_t start_dly_tb[2]; //36
 
-    uint16_t stabl_dly_tb[2];
-    uint16_t incr_dly_tb[2];
+    uint16_t stabl_dly_tb[2]; //40
+    uint16_t incr_dly_tb[2]; //44
 
-    uint16_t decr_dly_tb[2];
-    uint16_t dly_tb[2];
+    uint16_t decr_dly_tb[2]; //48
+    uint16_t dly_tb[2]; //52
 
-    uint16_t incr_to_dly_tb[2];
-    uint16_t decr_to_dly_tb[2];
+    uint16_t incr_to_dly_tb[2]; //56
+    uint16_t decr_to_dly_tb[2]; //60
 
-    uint16_t delta_tb[2];
-    uint16_t to_dly_mult;
+    uint16_t delta_tb[2]; //64
+    uint16_t to_dly_mult; //66
 
-    avs_profile_t voltage_write[2];
+    avs_profile_t voltage_write[2]; // 90
 
-    uint32_t total_current_read_cnt;
+    uint32_t total_current_read_cnt; //94
     uint32_t total_current_read_alert_cnt;
     uint32_t idd_current_zero_cnt;
     uint32_t ocw_mode;
@@ -176,8 +176,8 @@ typedef struct pgpe_avsbus
     uint16_t idd_min_values_raw_10ma[IDD_MIN_CAPTURE_SIZE];
     uint16_t idd_prev_10ma;
     uint16_t version;
-    uint16_t min_current_enable;
     pgpe_avsbus_usr_dtls_t avs_bus_ffdc;
+    uint16_t ocw_mode_cnt;
 } pgpe_avsbus_t;
 
 #define avs_get_vrm_start_dly_count(rail) G_pgpe_avsbus.vrm_start_dly_count[rail]

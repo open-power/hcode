@@ -129,6 +129,7 @@ typedef struct pgpe_pstate
     uint32_t corecache_off_accum_64th; //110
     occ_wof_values_t* occ_wof_values;
     uint32_t cur_freq_in_mhz;
+    uint32_t idd_tdp; //103
 } pgpe_pstate_t;
 
 
@@ -178,6 +179,10 @@ uint32_t pgpe_pstate_intp_vdd_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vcs_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_vddup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vdd);
 uint32_t pgpe_pstate_intp_vcsup_from_ps(uint32_t ps, uint32_t vpd_pt_set, uint32_t vratio_vcs);
+
+uint32_t pgpe_pstate_intp_idd_tdp_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+uint32_t pgpe_pstate_intp_idd_tdp_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
+
 uint32_t pgpe_pstate_intp_idd_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_idd_dc_from_ps(uint32_t ps, uint32_t vpd_pt_set);
 uint32_t pgpe_pstate_intp_ics_ac_from_ps(uint32_t ps, uint32_t vpd_pt_set);

@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -507,13 +507,13 @@ void pgpe_avsbus_init()
     G_pgpe_avsbus.idd_read_ocw_exit_below_10ma = 0;
     G_pgpe_avsbus.ocw_correction_threshold_10ma = MAX_VRM_CURRENT_10ma - OCW_ROLLOVER_VALUE_10ma;
     G_pgpe_avsbus.ocw_mode = 0;
+    G_pgpe_avsbus.ocw_mode_cnt = 0;
     G_pgpe_avsbus.ocw_cnt = 0;
     G_pgpe_avsbus.ocw_rollover_cnt = 0;
     G_pgpe_avsbus.ocw_rollover_low_current_cnt = 0;
     G_pgpe_avsbus.total_current_read_cnt = 0;
     G_pgpe_avsbus.total_current_read_alert_cnt = 0;
     G_pgpe_avsbus.idd_min_current_adj_cnt = 0;
-    G_pgpe_avsbus.min_current_enable = 0;
 
     uint32_t i;
 
@@ -891,6 +891,8 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     uint32_t rc = 0;
     uint32_t cmd_data = 0;
     uint32_t avs_status = 0;
+    uint32_t l_rollover_filter_tdp_10ma = 0;
+    uint32_t l_corrected_tdp_10ma = 0;
 
     if (bus_num != 0xFF)
     {
@@ -973,91 +975,76 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
 
                     if (b_current_below_correction)
                     {
-                        if (G_pgpe_avsbus.ocw_mode)
+                        // Unrealizable currents that get through the mode transition
+                        if (*ret_current <= (uint32_t)G_pgpe_avsbus.idd_min_threshold_10ma)
                         {
-                            uint32_t l_rollover_filter_10ma;
-                            uint32_t l_corrected_10ma;
-
+                            *ret_current += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
+                            G_pgpe_avsbus.ocw_rollover_low_current_cnt++;
+                        }
+                        else
+                        {
                             // The filter is 150% of the TDP current from VPD
-                            l_rollover_filter_10ma = G_pgpe_pstate.idd;  // G_pgpe_pstate.idd is in 10ma units
-                            l_rollover_filter_10ma +=  (l_rollover_filter_10ma >> 1);
+                            l_rollover_filter_tdp_10ma = G_pgpe_pstate.idd_tdp;  // G_pgpe_pstate.idd is in 10ma units
+                            l_rollover_filter_tdp_10ma +=  (l_rollover_filter_tdp_10ma >> 1);
 
-                            l_corrected_10ma = *ret_current;
-                            l_corrected_10ma += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
+                            l_corrected_tdp_10ma = *ret_current;
+                            l_corrected_tdp_10ma += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
 
-                            if (l_corrected_10ma < l_rollover_filter_10ma)
+                            if (l_corrected_tdp_10ma < l_rollover_filter_tdp_10ma)
                             {
-                                *ret_current = l_corrected_10ma;
-                                G_pgpe_avsbus.ocw_rollover_cnt++;
+                                *ret_current = l_corrected_tdp_10ma;
                                 PK_TRACE_DBG("AVS: Curr_R, OCW; corrected current: %u threshold %u status 0x%04X",
                                              *ret_current, (uint32_t)G_pgpe_avsbus.idd_current_thrshd_10ma, avs_status);
                             }
                         }
-                        else  // Not OCW mode
+
+                        if (current_scale_idx == CURRENT_SCALE_IDX_VDD)
                         {
-                            if (*ret_current < (uint32_t)G_pgpe_avsbus.idd_min_not_ocw_below_correction_10ma)
+                            if (*ret_current > (uint32_t)G_pgpe_avsbus.idd_max_current_10ma)
                             {
-                                G_pgpe_avsbus.idd_min_not_ocw_below_correction_10ma = (uint16_t) * ret_current;
+                                G_pgpe_avsbus.idd_max_current_10ma = (uint16_t) * ret_current;
                             }
 
-                            // Unrealizable currents that get through the mode transition
-                            if (*ret_current <= (uint32_t)G_pgpe_avsbus.idd_min_threshold_10ma)
+                            if (*ret_current && (*ret_current < G_pgpe_avsbus.idd_min_current_adj_10ma))
                             {
-                                *ret_current += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
-                                G_pgpe_avsbus.ocw_rollover_low_current_cnt++;
+                                G_pgpe_avsbus.idd_min_current_adj_10ma = (uint16_t) * ret_current;
+
+                                if (G_pgpe_avsbus.idd_min_current_adj_cnt < IDD_MIN_CAPTURE_SIZE)
+                                {
+                                    G_pgpe_avsbus.idd_min_values_adj_10ma[G_pgpe_avsbus.idd_min_current_adj_cnt] = (uint16_t) * ret_current;
+                                }
+
+                                G_pgpe_avsbus.idd_min_current_adj_cnt++;
+
+                                if (G_pgpe_avsbus.idd_min_current_adj_cnt == IDD_MIN_CAPTURE_SIZE)
+                                {
+                                    G_pgpe_avsbus.idd_min_current_adj_cnt = 0;
+                                }
                             }
+
+                            if (*ret_current == 0)
+                            {
+                                // Use the last non-zero reading for any zero values
+                                *ret_current = G_pgpe_avsbus.idd_prev_10ma;
+                                G_pgpe_avsbus.idd_current_zero_cnt++;
+                            }
+
+                            G_pgpe_avsbus.idd_prev_10ma = (uint16_t) * ret_current;
                         }
                     }
                     else
                     {
                         if (G_pgpe_avsbus.ocw_mode)
                         {
+                            G_pgpe_avsbus.ocw_mode_cnt++;
                             G_pgpe_avsbus.idd_read_ocw_exit_below_10ma = *ret_current;
                         }
 
-                        PK_TRACE_INF("AVS: Curr_R, Exiting OCW mode. Current %u", *ret_current);
+                        PK_TRACE_DBG("AVS: Curr_R, Exiting OCW mode. Current %u", *ret_current);
                         G_pgpe_avsbus.ocw_mode = 0;
+
                     }
-                }
-
-                if (current_scale_idx == CURRENT_SCALE_IDX_VDD)
-                {
-                    if (*ret_current > (uint32_t)G_pgpe_avsbus.idd_max_current_10ma)
-                    {
-                        G_pgpe_avsbus.idd_max_current_10ma = (uint16_t) * ret_current;
-
-                        if (*ret_current >= MIN_CAPTURE_TRIGGER_CURRENT_10ma)
-                        {
-                            G_pgpe_avsbus.min_current_enable = 1;
-                        }
-                    }
-
-                    if (*ret_current && (*ret_current < G_pgpe_avsbus.idd_min_current_adj_10ma) && G_pgpe_avsbus.min_current_enable)
-                    {
-                        G_pgpe_avsbus.idd_min_current_adj_10ma = (uint16_t) * ret_current;
-
-                        if (G_pgpe_avsbus.idd_min_current_adj_cnt < IDD_MIN_CAPTURE_SIZE)
-                        {
-                            G_pgpe_avsbus.idd_min_values_adj_10ma[G_pgpe_avsbus.idd_min_current_adj_cnt] = (uint16_t) * ret_current;
-                        }
-
-                        G_pgpe_avsbus.idd_min_current_adj_cnt++;
-
-                        if (G_pgpe_avsbus.idd_min_current_adj_cnt == IDD_MIN_CAPTURE_SIZE)
-                        {
-                            G_pgpe_avsbus.idd_min_current_adj_cnt = 0;
-                        }
-                    }
-
-                    if (*ret_current == 0)
-                    {
-                        // Use the last non-zero reading for any zero values
-                        *ret_current = G_pgpe_avsbus.idd_prev_10ma;
-                        G_pgpe_avsbus.idd_current_zero_cnt++;
-                    }
-
-                    G_pgpe_avsbus.idd_prev_10ma = (uint16_t) * ret_current;
-                }
+                } // end of Saddleback
 
                 break;
 
@@ -1099,6 +1086,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
     }
 
     pk_critical_section_exit(&ctx);
+
 }
 
 void pgpe_avsbus_status_write(uint32_t bus_num, uint32_t rail_num, uint32_t clear_mask,
