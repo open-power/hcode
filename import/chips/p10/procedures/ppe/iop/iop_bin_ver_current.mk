@@ -1,11 +1,11 @@
 # IBM_PROLOG_BEGIN_TAG
 # This is an automatically generated prolog.
 #
-# $Source: import/chips/p10/procedures/ppe/iop/iop_bin_ver.mk $
+# $Source: import/chips/p10/procedures/ppe/iop/iop_bin_ver_current.mk $
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2020
+# COPYRIGHT 2020,2025
 # [+] International Business Machines Corp.
 #
 #
@@ -23,13 +23,11 @@
 #
 # IBM_PROLOG_END_TAG
 
-# Calling gen_iop_bin_ver script to generate iop version binary from iop.fw file.
-# Output file is output/images/gen_iop_bin_ver/iop_fw_ver.bin
-GENERATED = gen_iop_bin_ver
-COMMAND = $(GENERATED)
-SOURCES += $(ROOTPATH)/chips/p10/procedures/ppe/iop/iop.fw
+GENERATED = gen_iop_bin_ver_current
+COMMAND = gen_iop_bin_ver
+SOURCES += $(ROOTPATH)/chips/p10/procedures/ppe/iop/iop_current.fw
 
-OUTPUT_DIR=$(OUTPUTPATH)/images/$(GENERATED)
+OUTPUT_DIR=$(IMAGEPATH)/$(GENERATED)
 OUTPUT_BIN=$(OUTPUT_DIR)/iop_fw_ver.bin
 
 TARGETS += $(OUTPUT_BIN)

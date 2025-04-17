@@ -5,7 +5,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2016,2020
+# COPYRIGHT 2016,2025
 # [+] International Business Machines Corp.
 #
 #
@@ -47,11 +47,12 @@ $(eval $(IMAGE)_FILE_XGPE     = $(IMAGEPATH)/xgpe_image/$3.xgpe_image.bin)
 $(eval $(IMAGE)_FILE_PGPE     = $(IMAGEPATH)/pgpe_image/$3.pgpe_image.bin)
 $(eval $(IMAGE)_FILE_RESTORE  = $(IMAGEPATH)/restore_image/$3.restore_image.bin)
 $(eval $(IMAGE)_FILE_IOPPE    = $(IMAGEPATH)/ioppe_image/$3.ioppe_image.bin)
-$(eval $(IMAGE)_FILE_IOPXRAM  = $(IMAGEPATH)/iopxram_image/$3.iopxram_image.bin)
+$(eval $(IMAGE)_FILE_IOPXRAM  = $(IMAGEPATH)/iopxram_image_current/$3.iopxram_image_current.bin)
 $(eval $(IMAGE)_FILE_OVERLAYS = $(RINGFILEPATH)/$3.$1.overlays.bin)
 $(eval $(IMAGE)_FILE_DYNAMIC  = $(RINGFILEPATH)/$3.$1.dynamic.bin)
 $(eval $(IMAGE)_FILE_DYN_FEAT = $(RINGFILEPATH)/$3.dynamic_features.bin)
 $(eval $(IMAGE)_FILE_DYN_SERV = $(RINGFILEPATH)/$3.dynamic_services.bin)
+$(eval $(IMAGE)_FILE_IOPXRAM2 = $(IMAGEPATH)/iopxram_image_legacy/$3.iopxram_image_legacy.bin)
 
 # Set up dependencies for
 # - building image ( $(IMAGE)_DEPS_IMAGE )
@@ -88,8 +89,8 @@ $(eval $(IMAGE)_DEPS_IOPPE     = $(IMAGEPATH)/ioppe_image/.$3.ioppe_image.bin.bu
 $(eval $(IMAGE)_DEPS_IOPPE    += $$($(IMAGE)_DEPS_RESTORE))
 $(eval $(IMAGE)_DEPS_IOPPE    += $$($(IMAGE)_PATH)/.$(IMAGE).append.core_restore)
 
-$(eval $(IMAGE)_DEPS_IMAGE    += $(IMAGEPATH)/iopxram_image/.$3.iopxram_image.bin.built)
-$(eval $(IMAGE)_DEPS_IOPXRAM   = $(IMAGEPATH)/iopxram_image/.$3.iopxram_image.bin.built)
+$(eval $(IMAGE)_DEPS_IMAGE    += $(IMAGEPATH)/iopxram_image_current/.$3.iopxram_image_current.bin.built)
+$(eval $(IMAGE)_DEPS_IOPXRAM   = $(IMAGEPATH)/iopxram_image_current/.$3.iopxram_image_current.bin.built)
 $(eval $(IMAGE)_DEPS_IOPXRAM  += $$($(IMAGE)_DEPS_IOPPE))
 $(eval $(IMAGE)_DEPS_IOPXRAM  += $$($(IMAGE)_PATH)/.$(IMAGE).append.ioppe)
 
@@ -113,8 +114,13 @@ $(eval $(IMAGE)_DEPS_DYN_SERV  = $$($(IMAGE)_FILE_DYN_SERV))
 $(eval $(IMAGE)_DEPS_DYN_SERV += $$($(IMAGE)_DEPS_DYN_FEAT))
 $(eval $(IMAGE)_DEPS_DYN_SERV += $$($(IMAGE)_PATH)/.$(IMAGE).append.dyn_features)
 
-$(eval $(IMAGE)_DEPS_REPORT    = $$($(IMAGE)_DEPS_DYN_SERV))
-$(eval $(IMAGE)_DEPS_REPORT   += $$($(IMAGE)_PATH)/.$(IMAGE).append.dyn_services)
+$(eval $(IMAGE)_DEPS_IMAGE    += $(IMAGEPATH)/iopxram_image_legacy/.$3.iopxram_image_legacy.bin.built)
+$(eval $(IMAGE)_DEPS_IOPXRAM2  = $(IMAGEPATH)/iopxram_image_legacy/.$3.iopxram_image_legacy.bin.built)
+$(eval $(IMAGE)_DEPS_IOPXRAM2 += $$($(IMAGE)_DEPS_DYN_SERV))
+$(eval $(IMAGE)_DEPS_IOPXRAM2 += $$($(IMAGE)_PATH)/.$(IMAGE).append.dyn_services)
+
+$(eval $(IMAGE)_DEPS_REPORT    = $$($(IMAGE)_DEPS_IOPXRAM2))
+$(eval $(IMAGE)_DEPS_REPORT   += $$($(IMAGE)_PATH)/.$(IMAGE).append.iopxram2)
 
 # Append nested images using all files and serialised by dependencies
 $(eval $(call XIP_TOOL,append,.sbe,$$($(IMAGE)_DEPS_SBE),$$($(IMAGE)_FILE_SBE)))
@@ -126,6 +132,7 @@ $(eval $(call XIP_TOOL,append,.ioppe,$$($(IMAGE)_DEPS_IOPPE),$$($(IMAGE)_FILE_IO
 $(eval $(call XIP_TOOL,append,.iopxram,$$($(IMAGE)_DEPS_IOPXRAM),$$($(IMAGE)_FILE_IOPXRAM)))
 $(eval $(call XIP_TOOL,append,.dyn_features,$$($(IMAGE)_DEPS_DYN_FEAT),$$($(IMAGE)_FILE_DYN_FEAT)))
 $(eval $(call XIP_TOOL,append,.dyn_services,$$($(IMAGE)_DEPS_DYN_SERV),$$($(IMAGE)_FILE_DYN_SERV)))
+$(eval $(call XIP_TOOL,append,.iopxram2,$$($(IMAGE)_DEPS_IOPXRAM2),$$($(IMAGE)_FILE_IOPXRAM2)))
 
 # Append PPE shared ring sections (but only if ENGD exists)
 $(eval $(call XIP_TOOL,append,.overlays,$$($(IMAGE)_DEPS_OVERLAYS),$$($(IMAGE)_FILE_OVERLAYS) 1))

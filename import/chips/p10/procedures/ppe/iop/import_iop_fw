@@ -6,7 +6,7 @@
 #
 # OpenPOWER EKB Project
 #
-# COPYRIGHT 2019
+# COPYRIGHT 2019,2025
 # [+] International Business Machines Corp.
 #
 #
@@ -27,12 +27,12 @@
 # This script copies IOP firmware file to a EKB repository
 #    Source directory is input by user
 #    Destination directory is 'chips/p10/procedures/ppe/iop/'
-#    File is renamed to 'iop.fw'
 #
 
 # IOP instruction code file path
 IOP_SRC=$1
-EKB_DST=${PROJECT_ROOT}/chips/p10/procedures/ppe/iop/iop.fw
+IOP_VER=$2
+EKB_DST=${PROJECT_ROOT}/chips/p10/procedures/ppe/iop/iop_$2.fw
 
 echo "IOP fw source: $IOP_SRC"
 echo "EKB destination: $EKB_DST"

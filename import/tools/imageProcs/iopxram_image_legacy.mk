@@ -26,16 +26,16 @@
 # $1 == chipId
 
 define BUILD_IOPXRAM_IMAGE
-$(eval IMAGE=$1.iopxram_image)
+$(eval IMAGE=$1.iopxram_image_legacy)
 
-$(eval $(IMAGE)_PATH=$(IMAGEPATH)/iopxram_image)
+$(eval $(IMAGE)_PATH=$(IMAGEPATH)/iopxram_image_legacy)
 $(eval $(IMAGE)_LINK_SCRIPT=iopxram_image.cmd)
-$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/iopxram_image/iopxram_image.o)
+$(eval $(IMAGE)_LAYOUT=$(IMAGEPATH)/iopxram_image_legacy/iopxram_image.o)
 $(eval iopxram_image_COMMONFLAGS += -I$(ROOTPATH)/chips/p10/utils/imageProcs/)
 
 # Files to be appended to image
-$(eval $(IMAGE)_FILE_IOPFW=$(IMAGEPATH)/gen_iop_bin/iop_fw.bin)
-$(eval $(IMAGE)_FILE_IOPFW_VER=$(IMAGEPATH)/gen_iop_bin_ver/iop_fw_ver.bin)
+$(eval $(IMAGE)_FILE_IOPFW=$(IMAGEPATH)/gen_iop_bin_legacy/iop_fw.bin)
+$(eval $(IMAGE)_FILE_IOPFW_VER=$(IMAGEPATH)/gen_iop_bin_ver_legacy/iop_fw_ver.bin)
 
 # Setup dependencies for
 # - building image ( $(IMAGE)_DEPS_IMAGE )

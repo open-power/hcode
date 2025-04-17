@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2016,2020                                                    */
+/* COPYRIGHT 2016,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -75,7 +75,7 @@ __header_64_reserved:
         .xip_section dynamic,      8
         .xip_section dyn_features, 8
         .xip_section dyn_services, 8
-        .xip_section
+        .xip_section iopxram2,     8
         .xip_section
         .xip_section
         .xip_section

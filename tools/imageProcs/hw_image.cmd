@@ -158,6 +158,15 @@ SECTIONS
     .dyn_services . : { *(.dyn_services) }
     _dyn_services_size = . - _dyn_services_origin;
 
+    ///////////////////////////////
+    // IOPXRAM2
+    ////////////////////////////////
+    . = ALIGN(8);
+    _iopxram2_origin = .;
+    _iopxram2_offset = . - _hw_image_origin;
+    .iopxram2 . : { *(.iopxram2) }
+    _iopxram2_size = . - _iopxram2_origin;
+
     ////////////////////////////////
     // end of the image
     ////////////////////////////////
