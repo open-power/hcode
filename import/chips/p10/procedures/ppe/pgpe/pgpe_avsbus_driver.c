@@ -459,7 +459,7 @@ void* pgpe_avsbus_data_addr()
 
 const uint32_t OCW_ROLLOVER_VALUE_10ma          = 32767;  // 327.67A in 10ma form
 const uint32_t OCW_THRESHOLD_10ma               = 32600;
-const uint32_t MAX_VRM_CURRENT_10ma             = 42000;
+const uint32_t MAX_VRM_CURRENT_10ma             = 45000;
 const uint32_t MIN_REAL_CURRENT_10ma            =  2000;  // 20A
 const uint32_t MIN_CAPTURE_TRIGGER_CURRENT_10ma = 30000;
 
@@ -471,7 +471,7 @@ void pgpe_avsbus_init()
 
 
     /*
-        MAX VRM Current                     42000
+        MAX VRM Current                     45000
         ^
         |    Corrected region
         v
@@ -482,7 +482,7 @@ void pgpe_avsbus_init()
         |    Don't correct in this region
         |    if OCW, reset OCW
         v
-        MAX VRM Current - OCW rollover       9233  (42000 - 32767)
+        MAX VRM Current - OCW rollover       12233  (45000 - 32767)
         ^
         |    always correct these values
         v
