@@ -260,14 +260,14 @@ void pgpe_occ_produce_fit_values()
 
     if (pgpe_pstate_is_pstate_enabled())
     {
-        G_pgpe_occ.ps_fit_avg       = G_pgpe_occ.ps_tb_accum / G_pgpe_occ.max_tb_delta;
-        G_pgpe_occ.ps_freq_fit_avg  = G_pgpe_occ.ps_freq_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ps_fit_avg       = G_pgpe_occ.ps_tb_accum;
+        G_pgpe_occ.ps_freq_fit_avg  = G_pgpe_occ.ps_freq_tb_accum;
         G_pgpe_occ.ps_wof_avg_accum += G_pgpe_occ.ps_fit_avg;
         G_pgpe_occ.ps_freq_wof_avg_accum += G_pgpe_occ.ps_freq_fit_avg;
-        G_pgpe_occ.thr_idx_fit_avg  = G_pgpe_occ.thr_idx_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.thr_idx_fit_avg  = G_pgpe_occ.thr_idx_tb_accum;
         G_pgpe_occ.thr_idx_wof_avg_accum += G_pgpe_occ.thr_idx_fit_avg;
-        G_pgpe_occ.vdd_fit_avg_mv = G_pgpe_occ.vdd_tb_accum / G_pgpe_occ.max_tb_delta;
-        G_pgpe_occ.vcs_fit_avg_mv = G_pgpe_occ.vcs_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.vdd_fit_avg_mv = G_pgpe_occ.vdd_tb_accum;
+        G_pgpe_occ.vcs_fit_avg_mv = G_pgpe_occ.vcs_tb_accum;
         G_pgpe_occ.vdd_wof_avg_accum_mv += G_pgpe_occ.vdd_fit_avg_mv;
         G_pgpe_occ.vcs_wof_avg_accum_mv += G_pgpe_occ.vcs_fit_avg_mv;
         G_pgpe_occ.ps_tb_accum  = 0;
@@ -279,9 +279,9 @@ void pgpe_occ_produce_fit_values()
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {
-        G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum / G_pgpe_occ.max_tb_delta;
-        G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum / G_pgpe_occ.max_tb_delta;
-        G_pgpe_occ.idn_fit_avg_ma = G_pgpe_occ.idn_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.idd_fit_avg_ma = G_pgpe_occ.idd_tb_accum;
+        G_pgpe_occ.ics_fit_avg_ma = G_pgpe_occ.ics_tb_accum;
+        G_pgpe_occ.idn_fit_avg_ma = G_pgpe_occ.idn_tb_accum;
         G_pgpe_occ.ocs_avg_pct_fit =  G_pgpe_occ.ocs_avg_pct_tb_accum;
         G_pgpe_occ.idd_wof_avg_accum_ma += G_pgpe_occ.idd_fit_avg_ma;
         G_pgpe_occ.ics_wof_avg_accum_ma += G_pgpe_occ.ics_fit_avg_ma;
@@ -326,8 +326,8 @@ void pgpe_occ_produce_fit_values()
 
     if (pgpe_pstate_is_wof_enabled())
     {
-        G_pgpe_occ.vratio_vdd_fit_avg = G_pgpe_occ.vratio_vdd_tb_accum / G_pgpe_occ.max_tb_delta;
-        G_pgpe_occ.vratio_vcs_fit_avg = G_pgpe_occ.vratio_vcs_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.vratio_vdd_fit_avg = G_pgpe_occ.vratio_vdd_tb_accum;
+        G_pgpe_occ.vratio_vcs_fit_avg = G_pgpe_occ.vratio_vcs_tb_accum;
         G_pgpe_occ.vratio_vdd_wof_accum += G_pgpe_occ.vratio_vdd_fit_avg;
         G_pgpe_occ.vratio_vcs_wof_accum += G_pgpe_occ.vratio_vcs_fit_avg;
 
@@ -342,13 +342,13 @@ void pgpe_occ_produce_fit_values()
 
     if (pgpe_wov_ocs_is_wov_underv_enabled())
     {
-        G_pgpe_occ.uv_avg_pct_fit =  G_pgpe_occ.uv_avg_pct_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.uv_avg_pct_fit =  G_pgpe_occ.uv_avg_pct_tb_accum;
         G_pgpe_occ.uv_avg_pct_wof_accum += G_pgpe_occ.uv_avg_pct_fit;
     }
 
     if (pgpe_wov_ocs_is_wov_overv_enabled())
     {
-        G_pgpe_occ.ov_avg_pct_fit =  G_pgpe_occ.ov_avg_pct_tb_accum / G_pgpe_occ.max_tb_delta;
+        G_pgpe_occ.ov_avg_pct_fit =  G_pgpe_occ.ov_avg_pct_tb_accum;
         G_pgpe_occ.ov_avg_pct_wof_accum += G_pgpe_occ.ov_avg_pct_fit;
     }
 
@@ -359,26 +359,6 @@ void pgpe_occ_produce_fit_values()
 
 void pgpe_occ_sample_values()
 {
-    //Read OTBR
-    G_pgpe_occ.present_tb = in32(TP_TPCHIP_OCC_OCI_OCB_OTBR);
-    uint32_t delta_tb;
-
-    //Calculate delta_tb while accounting for OTBR rollover
-    if(G_pgpe_occ.present_tb > G_pgpe_occ.prev_tb)
-    {
-        delta_tb = G_pgpe_occ.present_tb - G_pgpe_occ.prev_tb;
-    }
-    else
-    {
-        delta_tb = G_pgpe_occ.present_tb - G_pgpe_occ.prev_tb + 0xFFFFFFFF;
-    }
-
-    if(G_pgpe_occ.init_tb == 0)
-    {
-        delta_tb = 4096;
-        G_pgpe_occ.init_tb = 1;
-    }
-
     //Read IDD,ICS and IDN
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
@@ -400,17 +380,17 @@ void pgpe_occ_sample_values()
         //PK_TRACE("OCC: idd_ma=%u, ics_ma=%u, delta_tb=%u",G_pgpe_occ.idd_ma, G_pgpe_occ.ics_ma, delta_tb);
         if ( G_pgpe_occ.idd_ma )
         {
-            G_pgpe_occ.idd_tb_accum = G_pgpe_occ.idd_ma * delta_tb;
+            G_pgpe_occ.idd_tb_accum = G_pgpe_occ.idd_ma;
         }
 
         if ( G_pgpe_occ.idn_ma )
         {
-            G_pgpe_occ.idn_tb_accum = G_pgpe_occ.idn_ma * delta_tb;
+            G_pgpe_occ.idn_tb_accum = G_pgpe_occ.idn_ma;
         }
 
         if ( G_pgpe_occ.ics_ma )
         {
-            G_pgpe_occ.ics_tb_accum = G_pgpe_occ.ics_ma * delta_tb;
+            G_pgpe_occ.ics_tb_accum = G_pgpe_occ.ics_ma;
         }
 
         G_pgpe_occ.ocs_avg_pct_tb_accum = pgpe_wov_ocs_is_overcurrent();
@@ -419,18 +399,17 @@ void pgpe_occ_sample_values()
     //Pstate, Pstate_Freq, Vdd, Vcs, and throttle index
     if (pgpe_pstate_is_pstate_enabled())
     {
-        G_pgpe_occ.ps_tb_accum = (pgpe_pstate_get(pstate_curr) + pgpe_thr_ctrl_get_curr_ftx()) * delta_tb;
-        G_pgpe_occ.ps_freq_tb_accum = pgpe_pstate_get(pstate_curr) *
-                                      delta_tb; //Pstate written to DPLL(no throttle value included)
-        G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr_ext) * delta_tb;
-        G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr_ext) * delta_tb;
+        G_pgpe_occ.ps_tb_accum = (pgpe_pstate_get(pstate_curr) + pgpe_thr_ctrl_get_curr_ftx());
+        G_pgpe_occ.ps_freq_tb_accum = pgpe_pstate_get(pstate_curr);
+        G_pgpe_occ.vdd_tb_accum = pgpe_pstate_get(vdd_curr_ext);
+        G_pgpe_occ.vcs_tb_accum = pgpe_pstate_get(vcs_curr_ext);
         G_pgpe_occ.thr_idx_tb_accum = pgpe_thr_ctrl_get_curr_ftx();
     }
 
     if (pgpe_pstate_is_wof_enabled())
     {
-        G_pgpe_occ.vratio_vdd_tb_accum = pgpe_pstate_get(vratio_vdd_rounded) * delta_tb;
-        G_pgpe_occ.vratio_vcs_tb_accum = pgpe_pstate_get(vratio_vcs_rounded) * delta_tb;
+        G_pgpe_occ.vratio_vdd_tb_accum = pgpe_pstate_get(vratio_vdd_rounded);
+        G_pgpe_occ.vratio_vcs_tb_accum = pgpe_pstate_get(vratio_vcs_rounded);
         G_pgpe_occ.pwof_val->dw3.fields.vratio_vdd_roundup_avg = pgpe_pstate_get(vratio_vdd_rounded);
         G_pgpe_occ.pwof_val->dw3.fields.vratio_vcs_roundup_avg = pgpe_pstate_get(vratio_vcs_rounded);
         G_pgpe_occ.pwof_val->dw0.fields.wof_clip_pstate = pgpe_pstate_get(clip_wof) ;
@@ -444,13 +423,11 @@ void pgpe_occ_sample_values()
         {
             G_pgpe_occ.uv_avg_pct_tb_accum = -pgpe_wov_ocs_get_wov_curr_pct();
             G_pgpe_occ.ov_avg_pct_tb_accum = 0;
-            G_pgpe_occ.uv_avg_pct_tb_accum *=  delta_tb;
         }
         else
         {
             G_pgpe_occ.uv_avg_pct_tb_accum = 0;
             G_pgpe_occ.ov_avg_pct_tb_accum = pgpe_wov_ocs_get_wov_curr_pct();
-            G_pgpe_occ.ov_avg_pct_tb_accum *=  delta_tb;
         }
     }
 
