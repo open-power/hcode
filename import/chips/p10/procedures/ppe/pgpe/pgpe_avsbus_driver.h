@@ -178,6 +178,7 @@ typedef struct pgpe_avsbus
     uint16_t version;
     pgpe_avsbus_usr_dtls_t avs_bus_ffdc;
     uint16_t ocw_mode_cnt;
+    uint16_t ocw_break;
 } pgpe_avsbus_t;
 
 #define avs_get_vrm_start_dly_count(rail) G_pgpe_avsbus.vrm_start_dly_count[rail]
