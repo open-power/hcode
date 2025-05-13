@@ -457,10 +457,11 @@ void* pgpe_avsbus_data_addr()
 }
 
 
+const uint32_t MIN_REAL_CURRENT_10ma            =  4000;  // 40A
+const uint32_t OCW_ROLLOVER_HW_VALUE_10ma       = 36767;  // OCW HW setting
 const uint32_t OCW_ROLLOVER_VALUE_10ma          = 32767;  // 327.67A in 10ma form
 const uint32_t OCW_THRESHOLD_10ma               = 32600;
-const uint32_t MAX_VRM_CURRENT_10ma             = 45000;
-const uint32_t MIN_REAL_CURRENT_10ma            =  2000;  // 20A
+const uint32_t MIN_MAX_CURRENT_RANGE_10ma             = 36000;
 const uint32_t MIN_CAPTURE_TRIGGER_CURRENT_10ma = 30000;
 
 void pgpe_avsbus_init()
@@ -471,21 +472,25 @@ void pgpe_avsbus_init()
 
 
     /*
-        MAX VRM Current                     45000
+        Min MAX VRM Current                 36000
         ^
         |    Corrected region
         v
         Rollover value                      32767
         ^
-        |    OCW fire value                 32600
         |
         |    Don't correct in this region
         |    if OCW, reset OCW
         v
-        MAX VRM Current - OCW rollover       12233  (45000 - 32767)
+        MAX VRM Current - OCW rollover      xxxx   (36000 - 32767 + min)
+        ^
+        |    Candidate for correction if OCW is set
+        v
+        0
+        Minimum current -                   40 + CF0 Idd dc
         ^
         |    always correct these values
-        v
+        v    reset OCW
         0
     */
 
@@ -498,15 +503,17 @@ void pgpe_avsbus_init()
     G_pgpe_avsbus.saddleback_rollerover_enabled = 0;
     G_pgpe_avsbus.idd_current_thrshd_10ma = OCW_THRESHOLD_10ma;
     G_pgpe_avsbus.idd_current_rollover_10ma = OCW_ROLLOVER_VALUE_10ma;
-    G_pgpe_avsbus.idd_max_vrm_design_current_10ma = MAX_VRM_CURRENT_10ma;
+    G_pgpe_avsbus.idd_max_vrm_design_current_10ma = MIN_MAX_CURRENT_RANGE_10ma;
     G_pgpe_avsbus.idd_max_current_10ma = 0;
     G_pgpe_avsbus.idd_min_current_raw_10ma = 0xFFFF;
     G_pgpe_avsbus.idd_min_current_adj_10ma = 0xFFFF;
-    G_pgpe_avsbus.idd_min_threshold_10ma = MIN_REAL_CURRENT_10ma;
+    G_pgpe_avsbus.idd_min_threshold_10ma = pgpe_gppb_get_ops_idd_tdp_dc(VPD_PT_SET_BIASED, VPD_PV_CF0) >> 1;
     G_pgpe_avsbus.idd_min_not_ocw_below_correction_10ma = 0xFFFF;
     G_pgpe_avsbus.idd_read_ocw_exit_below_10ma = 0;
-    G_pgpe_avsbus.ocw_correction_threshold_10ma = MAX_VRM_CURRENT_10ma - OCW_ROLLOVER_VALUE_10ma;
     G_pgpe_avsbus.ocw_mode = 0;
+    G_pgpe_avsbus.ocw_break = OCW_ROLLOVER_HW_VALUE_10ma - OCW_ROLLOVER_VALUE_10ma;
+    G_pgpe_avsbus.ocw_correction_threshold_10ma = (MIN_MAX_CURRENT_RANGE_10ma + G_pgpe_avsbus.idd_min_threshold_10ma) -
+            OCW_ROLLOVER_VALUE_10ma;
     G_pgpe_avsbus.ocw_mode_cnt = 0;
     G_pgpe_avsbus.ocw_cnt = 0;
     G_pgpe_avsbus.ocw_rollover_cnt = 0;
@@ -976,7 +983,14 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                     if (b_current_below_correction)
                     {
                         // Unrealizable currents that get through the mode transition
-                        if (*ret_current <= (uint32_t)G_pgpe_avsbus.idd_min_threshold_10ma)
+                        if (*ret_current <= (uint32_t)G_pgpe_avsbus.ocw_break)
+                        {
+                            G_pgpe_avsbus.ocw_mode = 0;
+                            *ret_current += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
+                            G_pgpe_avsbus.ocw_rollover_low_current_cnt++;
+                        }
+                        else if ( (*ret_current > (uint32_t)G_pgpe_avsbus.ocw_break) &&
+                                  (*ret_current <= G_pgpe_avsbus.idd_min_threshold_10ma) )
                         {
                             *ret_current += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
                             G_pgpe_avsbus.ocw_rollover_low_current_cnt++;
@@ -990,7 +1004,7 @@ void pgpe_avsbus_current_read(uint32_t bus_num, uint32_t rail_num, uint32_t* ret
                             l_corrected_tdp_10ma = *ret_current;
                             l_corrected_tdp_10ma += (uint32_t)G_pgpe_avsbus.idd_current_rollover_10ma;
 
-                            if (l_corrected_tdp_10ma < l_rollover_filter_tdp_10ma)
+                            if (l_corrected_tdp_10ma < l_rollover_filter_tdp_10ma && (G_pgpe_avsbus.ocw_mode))
                             {
                                 *ret_current = l_corrected_tdp_10ma;
                                 PK_TRACE_DBG("AVS: Curr_R, OCW; corrected current: %u threshold %u status 0x%04X",
