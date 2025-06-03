@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2015,2024                                                    */
+/* COPYRIGHT 2015,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -346,7 +346,7 @@ typedef union
         uint64_t reserved0                  : 8;
         uint64_t io_index                   : 8;
         uint64_t compute_pwr_10mw           : 16;
-        uint64_t reserved1                  : 16;
+        uint64_t vio_pwr_mw                 : 16;
     } fields;
 } xgpe_wof_values_t;
 
