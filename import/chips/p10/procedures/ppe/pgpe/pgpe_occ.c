@@ -363,14 +363,17 @@ void pgpe_occ_sample_values()
 
     if (!pgpe_gppb_get_pgpe_flags(PGPE_FLAG_CURRENT_READ_DISABLE))
     {
-        pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
-                                 pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
-                                 &G_pgpe_occ.idd_ma,
-                                 CURRENT_SCALE_IDX_VDD);
-        pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
-                                 pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
-                                 &G_pgpe_occ.ics_ma,
-                                 CURRENT_SCALE_IDX_VCS);
+        if( !pgpe_gppb_get_pgpe_flags(PGPE_FLAG_IOSCM_ENABLE))
+        {
+            pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdd_avsbus_num(),
+                                     pgpe_gppb_get_avs_bus_topology_vdd_avsbus_rail(),
+                                     &G_pgpe_occ.idd_ma,
+                                     CURRENT_SCALE_IDX_VDD);
+            pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vcs_avsbus_num(),
+                                     pgpe_gppb_get_avs_bus_topology_vcs_avsbus_rail(),
+                                     &G_pgpe_occ.ics_ma,
+                                     CURRENT_SCALE_IDX_VCS);
+        }
 
         pgpe_avsbus_current_read(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(),
                                  pgpe_gppb_get_avs_bus_topology_vdn_avsbus_rail(),

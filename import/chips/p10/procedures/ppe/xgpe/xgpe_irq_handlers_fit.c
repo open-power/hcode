@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2019,2024                                                    */
+/* COPYRIGHT 2019,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -48,7 +48,7 @@ uint32_t    g_call_home_mma_on_avg_accum_8ths;
 extern XgpeHeader_t* G_xgpe_header_data;
 uint32_t G_throttleOn = 0;
 uint32_t G_throttleCount = 0;
-uint32_t G_static_powr_mw = 0;
+uint32_t G_static_powr_mw[MAX_IO] = {0, 0};
 
 extern uint32_t G_OCB_OCCFLG3_OR;
 extern uint32_t G_OCB_OCCFLG3_CLR;
@@ -212,13 +212,14 @@ void compute_io_power()
     do
     {
 
-        if (!(l_occflg3 & BIT32(17)) || (G_static_powr_mw || io_compute_state))
+        if (!(l_occflg3 & BIT32(17)) || (G_static_powr_mw[VDN_VIO] || io_compute_state))
         {
             break;
         }
         else
         {
-            G_static_powr_mw = 0;
+            G_static_powr_mw[VDN_VIO] = 0;
+            G_static_powr_mw[VIO] = 0;
         }
 
         if((static_lnk_cntlr->io_magic ==
@@ -242,10 +243,12 @@ void compute_io_power()
 
                 if (io_pgated_cntrlr & BIT32(x))
                 {
-                    G_static_powr_mw += io_cntrlr_data->base_power_mw;
+                    G_static_powr_mw[VDN_VIO] += io_cntrlr_data->base_power_mw;
+                    G_static_powr_mw[VIO] += io_cntrlr_data->vio_base_power_mw;
                 }
 
-                PK_TRACE("io_cntrlr_data %08x %08x", (uint32_t)io_cntrlr_data, G_static_powr_mw);
+                PK_TRACE("io_cntrlr_data %08x VDN_VIO %08x", (uint32_t)io_cntrlr_data, G_static_powr_mw[VDN_VIO]);
+                PK_TRACE("io_cntrlr_data %08x VIO %08x", (uint32_t)io_cntrlr_data, G_static_powr_mw[VIO]);
 
             }
 
@@ -263,29 +266,39 @@ void compute_io_power()
 
                 if (io_disable_lnks & BIT64(x))
                 {
-                    G_static_powr_mw += io_lnk_data->base_power_mw;
-                    PK_TRACE("D- Basepower %d %08X %08x", x, io_lnk_data->base_power_mw, io_addr + (sizeof(link_entry_t) * x));
+                    G_static_powr_mw[VDN_VIO] += io_lnk_data->base_power_mw;
+                    G_static_powr_mw[VIO] += io_lnk_data->vio_base_power_mw;
+                    PK_TRACE("D- VDN+VIO Basepower %d %08X %08x",
+                             x, io_lnk_data->base_power_mw, io_addr + (sizeof(link_entry_t) * x));
+                    PK_TRACE("D- VIO Basepower %d %08X %08x",
+                             x, io_lnk_data->vio_base_power_mw, io_addr + (sizeof(link_entry_t) * x));
                 }
 
                 if(io_active_lnks  & BIT64(x))
                 {
-                    G_static_powr_mw += io_lnk_data->base_power_mw;
-                    PK_TRACE("A -Basepower %d %08X %08x %08x", x, io_lnk_data->base_power_mw, io_addr + (sizeof(link_entry_t) * x),
+                    G_static_powr_mw[VDN_VIO] += io_lnk_data->base_power_mw;
+                    G_static_powr_mw[VIO] += io_lnk_data->vio_base_power_mw;
+                    PK_TRACE("A -VDN+VIO Basepower %d %08X %08x %08x", x, io_lnk_data->base_power_mw,
+                             io_addr + (sizeof(link_entry_t) * x),
+                             (uint32_t) io_lnk_data);
+                    PK_TRACE("A -VIO Basepower %d %08X %08x %08x", x, io_lnk_data->vio_base_power_mw, io_addr + (sizeof(link_entry_t) * x),
                              (uint32_t) io_lnk_data);
                 }
 
             }
 
-            PK_TRACE("G_static_powr_mw %08x io_base_powr_P01W %08x", G_static_powr_mw, io_base_powr_P01W);
+            PK_TRACE("G_static_powr_mw VDN_VIO %08x io_base_powr_P01W %08x", G_static_powr_mw[VDN_VIO], io_base_powr_P01W);
 
-            wof_io_values->fields.compute_pwr_10mw = (G_static_powr_mw + (io_base_powr_P01W * 10)) / 100;
-            G_static_powr_mw =  (G_static_powr_mw / 1000) + 1 + (io_base_powr_P01W / 100); //convert to Watts
+            wof_io_values->fields.compute_pwr_10mw = (G_static_powr_mw[VDN_VIO] + (io_base_powr_P01W * 10)) / 100;
+            wof_io_values->fields.vio_pwr_mw = (G_static_powr_mw[VIO] + (io_base_powr_P01W * 10)) / 100;
+            G_static_powr_mw[VDN_VIO] =  (G_static_powr_mw[VDN_VIO] / 1000) + 1 + (io_base_powr_P01W / 100); //convert to Watts
 
-            PK_TRACE("Total G_static_powr_mw %08x", G_static_powr_mw);
+            PK_TRACE("Total G_static_powr_mw[VDN_VIO] %08x VIO pwr mw %08x", G_static_powr_mw[VDN_VIO],
+                     wof_io_values->fields.vio_pwr_mw);
 
             //compute io index from wof table
             //and update to occ sram
-            if( G_static_powr_mw <= io_start )
+            if( G_static_powr_mw[VDN_VIO] <= io_start )
             {
                 io_idx = 0;
                 io_idx_power = io_start;
@@ -296,7 +309,7 @@ void compute_io_power()
             {
                 for ( io_idx = 1; io_idx < io_count; ++io_idx)
                 {
-                    if (G_static_powr_mw <= (io_start + (io_step * io_idx)))
+                    if (G_static_powr_mw[VDN_VIO] <= (io_start + (io_step * io_idx)))
                     {
                         io_idx_power = io_start + (io_step * io_idx);
                         io_compute_state = 1;
@@ -310,7 +323,7 @@ void compute_io_power()
                     PK_TRACE("So considering the last index io powr value");
                     io_idx = io_count - 1;
                     io_idx_power = io_start + (io_step * io_idx);
-                    G_static_powr_mw = io_idx_power;
+                    G_static_powr_mw[VDN_VIO] = io_idx_power;
 
                 }
 
@@ -320,16 +333,16 @@ void compute_io_power()
                 if (powr_diff)
                 {
                     io_pwr_fraction =
-                        (io_idx_power - G_static_powr_mw) / powr_diff;
+                        (io_idx_power - G_static_powr_mw[VDN_VIO]) / powr_diff;
                 }
             }
 
-            if (G_static_powr_mw)
+            if (G_static_powr_mw[VDN_VIO])
             {
-                PK_TRACE("G_static_powr_mw %08x %08x", G_static_powr_mw, io_idx_power);
+                PK_TRACE("G_static_powr_mw[VDN_VIO] %08x %08x", G_static_powr_mw[VDN_VIO], io_idx_power);
                 PK_TRACE("io_start %08x %08x", io_start, io_step);
                 PK_TRACE("writing to occ sram %x %x %x", io_idx_power, io_idx, io_pwr_fraction);
-                wof_io_values->fields.io_power_proxy_w = G_static_powr_mw;
+                wof_io_values->fields.io_power_proxy_w = G_static_powr_mw[VDN_VIO];
                 wof_io_values->fields.io_index = (uint8_t)io_idx << 4; //OCC Shared SRAM→io_index(1:3)
                 wof_io_values->fields.io_index |= (uint8_t)io_pwr_fraction << 1; //SRAM→io_index(4:6)
             }
