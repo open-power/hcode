@@ -290,11 +290,11 @@ void compute_io_power()
             PK_TRACE("G_static_powr_mw VDN_VIO %08x io_base_powr_P01W %08x", G_static_powr_mw[VDN_VIO], io_base_powr_P01W);
 
             wof_io_values->fields.compute_pwr_10mw = (G_static_powr_mw[VDN_VIO] + (io_base_powr_P01W * 10)) / 100;
-            wof_io_values->fields.vio_pwr_mw = (G_static_powr_mw[VIO] + (io_base_powr_P01W * 10)) / 100;
+            wof_io_values->fields.vio_pwr_10mw = (G_static_powr_mw[VIO] + (io_base_powr_P01W * 10)) / 100;
             G_static_powr_mw[VDN_VIO] =  (G_static_powr_mw[VDN_VIO] / 1000) + 1 + (io_base_powr_P01W / 100); //convert to Watts
 
             PK_TRACE("Total G_static_powr_mw[VDN_VIO] %08x VIO pwr mw %08x", G_static_powr_mw[VDN_VIO],
-                     wof_io_values->fields.vio_pwr_mw);
+                     wof_io_values->fields.vio_pwr_10mw);
 
             //compute io index from wof table
             //and update to occ sram

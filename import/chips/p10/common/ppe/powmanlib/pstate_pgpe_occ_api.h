@@ -281,7 +281,7 @@ typedef struct
             uint64_t vcs_avg_mv                 : 16;
             uint64_t vdn_avg_mv                 : 16;
             uint64_t dirty_pstate_inst          : 8;
-            uint64_t reserved                   : 8;
+            uint64_t ioscm_state                : 8;
         } fields;
     } dw2;
     union
@@ -346,7 +346,7 @@ typedef union
         uint64_t reserved0                  : 8;
         uint64_t io_index                   : 8;
         uint64_t compute_pwr_10mw           : 16;
-        uint64_t vio_pwr_mw                 : 16;
+        uint64_t vio_pwr_10mw               : 16;
     } fields;
 } xgpe_wof_values_t;
 

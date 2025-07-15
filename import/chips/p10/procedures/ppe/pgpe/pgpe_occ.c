@@ -36,6 +36,8 @@
 #include "p10_oci_proc.H"
 #include "p10_scom_eq_1.H"
 
+extern pgpe_pstate_t G_pgpe_pstate __attribute__((section (".data_structs")));
+
 pgpe_occ_t G_pgpe_occ __attribute__((section (".data_structs")))  =
 {
     0,
@@ -152,6 +154,8 @@ void pgpe_occ_produce_wof_values()
                     G_pgpe_occ.wof_tick;
             G_pgpe_occ.pwof_val->dw2.fields.vcs_avg_mv = (G_pgpe_occ.vcs_wof_avg_accum_mv + G_pgpe_occ.wof_tick_rnd) /
                     G_pgpe_occ.wof_tick;
+            G_pgpe_occ.pwof_val->dw2.fields.ioscm_state = pgpe_gppb_get_pgpe_flags(PGPE_FLAG_IOSCM_ENABLE);
+            G_pgpe_occ.pwof_val->dw2.fields.vdn_avg_mv = G_pgpe_pstate.vdn_vlt;
             G_pgpe_occ.ps_wof_avg_accum = 0;
             G_pgpe_occ.ps_freq_wof_avg_accum = 0;
             G_pgpe_occ.thr_idx_wof_avg_accum = 0;

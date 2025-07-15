@@ -566,6 +566,11 @@ void pgpe_avsbus_init()
 
         // Set the Vdone timeout
         G_pgpe_avsbus.decr_to_dly_tb[RUNTIME_RAIL_VCS] = us_to_tb(3000);  // 3ms
+
+        //Read VDN voltage
+        pgpe_avsbus_voltage_read(pgpe_gppb_get_avs_bus_topology_vdn_avsbus_num(),
+                                 pgpe_gppb_get_avs_bus_topology_vdn_avsbus_rail(),
+                                 &G_pgpe_pstate.vdn_vlt, RUNTIME_RAIL_VDN);
     }
     else
     {

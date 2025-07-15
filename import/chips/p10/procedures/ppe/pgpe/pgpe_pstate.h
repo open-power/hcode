@@ -130,6 +130,7 @@ typedef struct pgpe_pstate
     occ_wof_values_t* occ_wof_values;
     uint32_t cur_freq_in_mhz;
     uint32_t idd_tdp; //103
+    uint32_t vdn_vlt; //104
 } pgpe_pstate_t;
 
 
