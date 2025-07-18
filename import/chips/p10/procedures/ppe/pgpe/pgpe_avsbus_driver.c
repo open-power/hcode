@@ -458,6 +458,7 @@ void* pgpe_avsbus_data_addr()
 
 
 const uint32_t MIN_REAL_CURRENT_10ma            =  4000;  // 40A
+const uint32_t MIN_REAL_ECO_CURRENT_10ma        =  2000;  // 20A
 const uint32_t OCW_ROLLOVER_HW_VALUE_10ma       = 36767;  // OCW HW setting
 const uint32_t OCW_ROLLOVER_VALUE_10ma          = 32767;  // 327.67A in 10ma form
 const uint32_t OCW_THRESHOLD_10ma               = 32600;
@@ -512,6 +513,18 @@ void pgpe_avsbus_init()
     G_pgpe_avsbus.idd_read_ocw_exit_below_10ma = 0;
     G_pgpe_avsbus.ocw_mode = 0;
     G_pgpe_avsbus.ocw_break = OCW_ROLLOVER_HW_VALUE_10ma - OCW_ROLLOVER_VALUE_10ma;
+
+    //If the system has ECO cores, we need to reduce the current threshold,
+    //because, eco cores will powered off only l3 will be on, so in the idle
+    //case current output from the system will be comparitively less ( Noticed
+    //less than 40A). Hence we are reducing by 20A to avoid the falso
+    //correction.
+    if ( G_pgpe_pstate.eco_core_count )
+    {
+        //36767 - 32767 - 2000 = 2000
+        G_pgpe_avsbus.ocw_break = OCW_ROLLOVER_HW_VALUE_10ma - OCW_ROLLOVER_VALUE_10ma - MIN_REAL_ECO_CURRENT_10ma;
+    }
+
     G_pgpe_avsbus.ocw_correction_threshold_10ma = (MIN_MAX_CURRENT_RANGE_10ma + G_pgpe_avsbus.idd_min_threshold_10ma) -
             OCW_ROLLOVER_VALUE_10ma;
     G_pgpe_avsbus.ocw_mode_cnt = 0;
