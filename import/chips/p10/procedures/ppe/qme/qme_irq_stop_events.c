@@ -5,7 +5,7 @@
 /*                                                                        */
 /* OpenPOWER EKB Project                                                  */
 /*                                                                        */
-/* COPYRIGHT 2018,2022                                                    */
+/* COPYRIGHT 2018,2025                                                    */
 /* [+] International Business Machines Corp.                              */
 /*                                                                        */
 /*                                                                        */
@@ -101,8 +101,11 @@ qme_send_pig_type_a()
 
     if( G_qme_record.hcode_func_enabled & QME_PIG_TYPEA_ENABLE )
     {
+        //For stop3 request, both c_stop2_reached &
+        //c_stop3_reached will have same core bits set, hence both
+        //variables will be used to update optiasv0 (clocks off state)
         just_stop2 = G_qme_record.c_stop2_reached &
-                     (~G_qme_record.c_stop3_reached) &
+                     (G_qme_record.c_stop3_reached) &
                      (~G_qme_record.c_stop11_reached);
 
         pig_data = ( PIG_TYPE_A << SHIFT32(4) ) |
