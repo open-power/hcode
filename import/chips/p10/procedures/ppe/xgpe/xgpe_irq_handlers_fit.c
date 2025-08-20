@@ -568,7 +568,6 @@ void handle_wof_iddq_values()
 {
     uint32_t c;
     uint32_t opitasv0;
-    uint32_t opitasv1;
     uint32_t opitasv2;
     uint32_t opitasv3;
     uint32_t occflg6 = in32(G_OCB_OCCFLG6);
@@ -577,7 +576,6 @@ void handle_wof_iddq_values()
     uint32_t mma_on_avg_8ths = 0;
 
     opitasv0 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV0);//Read PCB Type A0(Core off)
-    opitasv1 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV1);//Read PCB Type A1(Core Vmin)
     opitasv2 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV2);//Read PCB Type A2(MMA Off)
     opitasv3 = in32(TP_TPCHIP_OCC_OCI_OCB_OPITASV3);//Read PCB Type A3(L3 Off)
 
@@ -591,12 +589,6 @@ void handle_wof_iddq_values()
             if (opitasv2 & CORE_MASK(c))
             {
                 G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_MMA_OFF]++;
-            }
-
-            //if core c is Vmin(1)
-            if ((opitasv1 & CORE_MASK(c)))
-            {
-                G_iddq.curr_cnts.act_val[c][ACT_CNT_IDX_CORE_VMIN]++;
             }
 
             if (opitasv0 & CORE_MASK(c))
