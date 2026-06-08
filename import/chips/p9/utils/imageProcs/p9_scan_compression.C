@@ -919,7 +919,6 @@ int
 rs4_embed_cmsk( CompressedScanData** io_rs4,
                 CompressedScanData*  i_rs4Cmsk )
 {
-    char* embeddedAddr = (char*)(*io_rs4 + 1);
     size_t embeddedSize = be16toh(i_rs4Cmsk->iv_size);
     size_t totalSize   = be16toh((*io_rs4)->iv_size) + embeddedSize;
 
@@ -930,6 +929,10 @@ rs4_embed_cmsk( CompressedScanData** io_rs4,
     {
         return BUG(SCAN_COMPRESSION_NO_MEMORY);
     }
+
+    // realloc() above may move the buffer, so derive the embedded address from
+    // the (possibly new) *io_rs4 pointer rather than from the pre-realloc one.
+    char* embeddedAddr = (char*)(*io_rs4 + 1);
 
     // Make space for cmsk ring
     memmove(embeddedAddr + embeddedSize,
